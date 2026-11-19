@@ -4567,7 +4567,7 @@ const GAME_CONFIG = {
       merCxEl(".mer-cx-rec").classList.remove("on");
       merCxDom().classList.add("popts");
     }, 3400);
-    if (L.rec.length >= 90) merCxOffer(performance.now() + 10000);
+    /* WATCH REPLAY is offered inside the popts panel — no immediate offer button */
   }
   function merCxCamEnd() {
     var a = t.drive;
@@ -4680,7 +4680,7 @@ const GAME_CONFIG = {
     R && R.state === "running" && (R.t0 += r * 1000);
     var D = P.rec,
       last = P.n - 1 - P.s < 22,
-      sp = last ? 0.45 : 1.3;
+      sp = last ? 0.3 : 0.85;
     P.s += r * 10 * sp;
     if (P.s >= P.n - 1.001) return merCxReplayEnd();
     var i0 = Math.floor(P.s),

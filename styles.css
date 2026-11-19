@@ -858,4 +858,4 @@ html, body { height: 100vh; height: 100dvh; background: #000; -webkit-text-size-
 #game .mer-cx-popts { position: absolute; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: none; flex-direction: column; align-items: center; gap: 10px; z-index: 10; }
 #game .mer-cx.popts .mer-cx-popts { display: flex; animation: merCxPop 0.35s cubic-bezier(.1,.9,.2,1) both; }
 #game .mer-cx.popts .mer-cx-watch { display: none; }
-#game .mer-cx-popt { position: static; display: block; transform: skewX(-12deg); width: 220px; text-align: center; font-size: 15px; padding: 14px 20px; }
+#game .mer-cx-popt { position: static; display: block; transform: skewX(-12deg); width: 220px; text-align: center; font-size: 15px; padding: 14px 20px; font-style: normal; letter-spacing: 0.18em; }
