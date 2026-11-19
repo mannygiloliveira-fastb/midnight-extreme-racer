@@ -4528,8 +4528,10 @@ const GAME_CONFIG = {
     merCxSlow(0.28, 1.5, 0.6);
     MERCX.cam = { kind: "fin", t: 0, dur: 2.3 };
     merCxBars(!0);
-    merCxLines(!0);
+    merCxLines(!1);
     merCxFlash();
+    merBoard(null);
+    t.host && t.host.classList.add("mer-cx-postrace");
     var d = merCxDom();
     merCxEl(".mer-cx-time").textContent = Pn(I);
     merCxEl(".mer-cx-lbl").textContent = nb ? (T ? "NEW HIGH SCORE" : "FIRST HIGH SCORE") : "LAP COMPLETE";
@@ -4599,10 +4601,10 @@ const GAME_CONFIG = {
       sa = Math.sin(an),
       dx = f[0] * ca - f[1] * sa,
       dz = f[0] * sa + f[1] * ca,
-      dist = 7.5 + 2.5 * w;
-    o.position.set(c.x + dx * dist, y0 + 1.3 + 0.9 * w, c.z + dz * dist);
-    o.lookAt(c.x, y0 + 1.5, c.z);
-    merCxFov(48);
+      dist = 12 + 5 * w;
+    o.position.set(c.x + dx * dist, y0 + 2.2 + 1.8 * w, c.z + dz * dist);
+    o.lookAt(c.x, y0 + 1.2, c.z);
+    merCxFov(44);
     return !0;
   }
   function merCxReplayStart() {
@@ -4655,7 +4657,7 @@ const GAME_CONFIG = {
     R && R.state === "running" && (R.t0 += r * 1000);
     var D = P.rec,
       last = P.n - 1 - P.s < 22,
-      sp = last ? 0.55 : 2.1;
+      sp = last ? 0.45 : 1.3;
     P.s += r * 10 * sp;
     if (P.s >= P.n - 1.001) return merCxReplayEnd();
     var i0 = Math.floor(P.s),
@@ -4766,6 +4768,7 @@ const GAME_CONFIG = {
     MERCX.lastLap = null;
     MERCX.beat = { dr: 0, cd: 0, boostLap: !1 };
     clearTimeout(MERCX.finT);
+    t.host && t.host.classList.remove("mer-cx-postrace");
     if (MERCX.dom) {
       (merCxOffer(0), merCxBars(!1), merCxLines(!1));
       (merCxEl(".mer-cx-fin").classList.remove("on"), merCxEl(".mer-cx-rec").classList.remove("on"));
@@ -4781,7 +4784,7 @@ const GAME_CONFIG = {
     return !0;
   }
   function $s(e, a) {
-    if (t && t.mFx && t.mFx.board) { merBoard(e === "GO" ? "GO!" : e === "1" ? "SET..." : "READY..."); return; }
+    if (t && t.mFx && t.mFx.board && e !== "GO" && e !== "1" && e !== "2" && e !== "3") { merBoard(e); return; }
     var r = t.host,
       n = t.bigNum;
     (n ||
@@ -4887,11 +4890,12 @@ const GAME_CONFIG = {
       g.shadowBlur = 0;
     }
     ((g.fillStyle = e.boosting ? "#ffb070" : "#7fa6d9"), (g.font = "800 8px Arial, sans-serif"), g.fillText("NITRO", cx, 274));
-    var z = t.raceOn && e.lapTxt ? e.lapTxt : "FREE DRIVE", q = 22;
-    g.font = "italic 900 " + q + 'px "Arial Black", Arial, sans-serif';
-    for (; q > 11 && g.measureText(z).width > (t.raceOn ? 150 : 180); ) (q--, (g.font = "italic 900 " + q + 'px "Arial Black", Arial, sans-serif'));
-    ((g.fillStyle = t.raceOn ? "#ffffff" : "#7fa6d9"), g.fillText(z, t.raceOn ? cx + 14 : cx, 310));
-    t.raceOn && ((g.fillStyle = "#6fd0ff"), (g.font = "800 9px Arial, sans-serif"), (g.textAlign = "left"), g.fillText("LAP", 52, 310));
+    if (!t.raceOn) {
+      var z = "FREE DRIVE", q = 22;
+      g.font = "italic 900 " + q + 'px "Arial Black", Arial, sans-serif';
+      for (; q > 11 && g.measureText(z).width > 180; ) (q--, (g.font = "italic 900 " + q + 'px "Arial Black", Arial, sans-serif'));
+      ((g.fillStyle = "#7fa6d9"), g.fillText(z, cx, 310));
+    }
   }
 
   /* Arcade camera shake: strong while boosting, subtle near top speed. */
@@ -5422,7 +5426,11 @@ const GAME_CONFIG = {
       for (i = 0; i < n; i++) pos[i * 3 + 1] = -500;
       var g = new fe.BufferGeometry();
       g.setAttribute("position", new fe.BufferAttribute(pos, 3));
-      var pts = new fe.Points(g, new fe.PointsMaterial({ color: 0xffa640, size: 0.32, transparent: !0, opacity: 0.95, blending: fe.AdditiveBlending, depthWrite: !1, toneMapped: !1 }));
+      var spCv = document.createElement("canvas"); spCv.width = spCv.height = 32;
+      var spCtx = spCv.getContext("2d"), spGr = spCtx.createRadialGradient(16,16,0,16,16,16);
+      spGr.addColorStop(0,"rgba(255,220,120,1)"); spGr.addColorStop(0.35,"rgba(255,110,20,0.9)"); spGr.addColorStop(1,"rgba(255,40,0,0)");
+      spCtx.fillStyle = spGr; spCtx.beginPath(); spCtx.arc(16,16,16,0,Math.PI*2); spCtx.fill();
+      var pts = new fe.Points(g, new fe.PointsMaterial({ map: new fe.CanvasTexture(spCv), color: 0xffffff, size: 0.38, transparent: !0, opacity: 0.95, blending: fe.AdditiveBlending, depthWrite: !1, toneMapped: !1, alphaTest: 0.01 }));
       pts.frustumCulled = !1;
       t.group.add(pts);
       S = MER.sp = { n: n, pos: pos, g: g, v: new Float32Array(n * 3), life: new Float32Array(n), next: 0, acc: 0, pts: pts };
@@ -6818,7 +6826,7 @@ const GAME_CONFIG = {
         }
         var Ot = i.flash && o < i.flash.until ? i.flash : null,
           ia = o < i.dUntil && i.dTxt;
-        ((z.time = Ot && o < Ot.until - 2500 ? Pn(Ot.time) : Pn(I)),
+        ((z.time = ""),
           (z.hit = l),
           o < i.go
             ? ((z.label = "GO"), (z.color = cn), (z.lights = [cn, cn, cn]))
@@ -7017,7 +7025,10 @@ const GAME_CONFIG = {
       u = !!((Pt.boost && performance.now() - (merBoostOk.t || 0) < 2500) || na.boost || qa.boost);
     ((a.thrIn = c), a.nitro === void 0 && (a.nitro = 1));
     var p = !!(u && a.nitro > 0.02 && a.v > 2 && c >= 0);
+    var prevNitro = a.nitro;
     ((a.nitro = Math.max(0, Math.min(1, a.nitro + (p ? -0.36 : 0.11) * e))), (a.boosting = p));
+    if (prevNitro < 0.5) a.boostDepleted = !0;
+    if (a.boostDepleted && !p && a.nitro >= 0.98 && prevNitro < 0.98) { a.boostDepleted = !1; we("BOOST READY", 1800); }
     var v = 261;
     c > 0
       ? (a.v += (a.v < 0 ? 40 : 7 + 25 * Math.max(0, 1 - a.v / v)) * c * e)

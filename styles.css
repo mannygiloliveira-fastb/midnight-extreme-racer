@@ -847,3 +847,9 @@ html, body { height: 100vh; height: 100dvh; background: #000; -webkit-text-size-
 #game.lc-three:not(.lc-touchui) .lc-drivebar:hover span, #game.lc-three:not(.lc-touchui) .lc-drivebar.mer-keys span { max-height: 260px; opacity: 1; padding: 8px 4px 2px !important; }
 #game.lc-three:not(.lc-touchui) .lc-drivebar::after { content: "H  KEYS"; order: 1; flex: 0 0 auto; padding: 0 4px 0 2px; font: 800 10px/1 Arial, sans-serif; letter-spacing: 0.12em; color: #6fd0ff; opacity: 0.8; white-space: pre; }
 #game.lc-three:not(.lc-touchui) .lc-drivebar.mer-keys::after, #game.lc-three:not(.lc-touchui) .lc-drivebar:hover::after { opacity: 0.35; }
+
+/* Post-race state: hide driving controls and speedometer so they don't crowd the lap card */
+#game.mer-cx-postrace .lc-tc,
+#game.mer-cx-postrace .lc-drivebar,
+#game.mer-cx-postrace .lc-gauge,
+#game.mer-cx-postrace .lc-rhud { visibility: hidden !important; opacity: 0 !important; transition: opacity 0.4s ease; }
