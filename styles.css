@@ -838,3 +838,12 @@ html, body { height: 100vh; height: 100dvh; background: #000; -webkit-text-size-
 #game .lc-cine .mer-cx-st .mer-badge em { display: inline; margin: 0; font: italic 700 clamp(11px, 1.6vw, 20px)/1.3 Arial, sans-serif; letter-spacing: 0.08em; color: #ffc83a; }
 #game .lc-cine.lc-on.mer-out .mer-cx-st { transform: translate(-120%, -50%); opacity: 0; transition: transform 0.38s cubic-bezier(.65,0,.95,.45), opacity 0.38s ease-in; }
 @media (prefers-reduced-motion: reduce) { #game .mer-cx-sl { display: none; } }
+
+/* Drive panel on computers: compact button row, key list folded away, faded while driving */
+#game.lc-three:not(.lc-touchui) .lc-drivebar { flex-direction: row !important; flex-wrap: wrap !important; align-items: center !important; justify-content: flex-end; width: auto !important; max-width: 380px; padding: 6px !important; gap: 6px !important; opacity: 0.55; transition: opacity 0.3s ease; overflow: hidden !important; }
+#game.lc-three:not(.lc-touchui) .lc-drivebar:hover, #game.lc-three:not(.lc-touchui) .lc-drivebar.mer-keys { opacity: 1; }
+#game.lc-three:not(.lc-touchui) .lc-drivebar button { width: auto !important; padding: 7px 11px !important; font-size: 11px !important; line-height: 1 !important; }
+#game.lc-three:not(.lc-touchui) .lc-drivebar span { order: 2; flex: 0 0 100%; box-sizing: border-box; max-height: 0; opacity: 0; margin: 0 !important; padding: 0 4px !important; overflow: hidden; transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease; }
+#game.lc-three:not(.lc-touchui) .lc-drivebar:hover span, #game.lc-three:not(.lc-touchui) .lc-drivebar.mer-keys span { max-height: 260px; opacity: 1; padding: 8px 4px 2px !important; }
+#game.lc-three:not(.lc-touchui) .lc-drivebar::after { content: "H  KEYS"; order: 1; flex: 0 0 auto; padding: 0 4px 0 2px; font: 800 10px/1 Arial, sans-serif; letter-spacing: 0.12em; color: #6fd0ff; opacity: 0.8; white-space: pre; }
+#game.lc-three:not(.lc-touchui) .lc-drivebar.mer-keys::after, #game.lc-three:not(.lc-touchui) .lc-drivebar:hover::after { opacity: 0.35; }

@@ -59,6 +59,10 @@ The public beta link is a claude.ai artifact: https://claude.ai/artifact/LdyhWtD
 - Race start scene (`Fn`, `x0`) uses the arcade title. `merCxStartFx()` flashes on the title slam and slides it out with speed lines when the car drives off.
 - Test hook: open the game with `?cxtest` in the address, start a race, then run `__merCx.lap(ms, bestMs)` in the console to fake a lap along the track centre line, and `__merCx.replay()` to start the replay. It does nothing without `?cxtest`.
 
+## Drive panel (computers)
+
+- `.lc-drivebar` is a compact faded button row (Camera, Reset lap, Exit race). The key list is folded away. It opens on hover, with H (`merKeys()`), and for 6.5 s at the first GO of a session (`merKeysPeek()`). Phones (`lc-touchui`) are unchanged.
+
 ## Showroom
 
 - `merShowroomEnter` puts the hero car nose-in via `merNoseIn(true)`. `merShowroomExit` restores the nose-out spot so the race start is unchanged.

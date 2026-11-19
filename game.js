@@ -4128,6 +4128,7 @@ const GAME_CONFIG = {
               ["R", "Reset lap"],
               ["M", "Engine sound"],
               ["N", "Music"],
+              ["H", "Hide keys"],
             ]
           : [
               ["W", "Gas"],
@@ -4138,6 +4139,7 @@ const GAME_CONFIG = {
               ["R", "Reset car"],
               ["T", "Time trial"],
               ["M", "Sound"],
+              ["H", "Hide keys"],
             ];
       e &&
         (e.innerHTML = a
@@ -4734,6 +4736,25 @@ const GAME_CONFIG = {
       replay: function () { merCxReplayStart(); return !!MERCX.rp; },
       game: function () { return t; },
     };
+  /* Drive panel (desktop): the key list stays folded away. It opens on hover, with H, and
+     for a few seconds at the first GO of the session. */
+  function merKeys(on) {
+    var b = t && t.host && t.host.querySelector(".lc-drivebar");
+    b && b.classList.toggle("mer-keys", on === void 0 ? !b.classList.contains("mer-keys") : !!on);
+  }
+  function merKeysPeek() {
+    if (MERCX.keysPeek) return;
+    MERCX.keysPeek = 1;
+    merKeys(!0);
+    setTimeout(function () {
+      merKeys(!1);
+    }, 6500);
+  }
+  window.addEventListener("keydown", function (e) {
+    if (e.code !== "KeyH" || e.repeat || !t || !t.drive) return;
+    var tag = (document.activeElement && document.activeElement.tagName) || "";
+    tag !== "INPUT" && tag !== "TEXTAREA" && merKeys();
+  });
   /* Race ended or was left: drop every cinematic state. */
   function merCxReset() {
     MERCX.rp && merCxReplayEnd();
@@ -6696,7 +6717,8 @@ const GAME_CONFIG = {
             (i.dUntil = 0),
             (i.flash = null),
             (i.cdS = 0),
-            $s("GO", cn)),
+            $s("GO", cn),
+            merKeysPeek()),
           Q && (Q.visible = !1));
       }
       if (i.state === "running") {
