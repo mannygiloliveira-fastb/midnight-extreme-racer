@@ -27,6 +27,10 @@ Owner: Manny. Beta testers are friends who play from a public link. They do not 
 - Test on a phone: find the computer's local IP and open `http://<ip>:8080` on the phone while both are on the same Wi-Fi.
 - Manny's priority is phone players first, with graphics kept as good as possible.
 
+## Repository
+
+https://github.com/mannygiloliveira-fastb/midnight-extreme-racer
+
 ## Publishing (current workflow: "option 1")
 
 The public beta link is a claude.ai artifact: https://claude.ai/artifact/LdyhWtD5LXWM5EhJxCq8ku (slug `9f075a1b-1179-44f0-93ec-fb285f899dbe`, title "Midnight Extreme Racer", shared publicly). Build and test here in Claude Code. To publish, Manny opens a claude.ai chat, attaches the changed files, and asks Claude to publish them to that slug with the artifact tools (`get_artifact` for the live version, then `publish_files` with `shared_live: "public"` and `artifact_title: "Midnight Extreme Racer"`). Later the plan may move to Netlify or GitHub Pages.
