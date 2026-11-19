@@ -4573,8 +4573,9 @@ const GAME_CONFIG = {
         pos,
         look,
         fov,
-        lerp = 0.22;
-      if (sh === "chase") ((pos = [c.x - f[0] * 11, y0 + 2.6, c.z - f[1] * 11]), (look = [c.x + f[0] * 6, y0 + 1.5, c.z + f[1] * 6]), (fov = 55));
+        fr = P.r || 0.016,
+        lerp = 1 - Math.pow(0.88, fr * 60);
+      if (sh === "chase") ((pos = [c.x - f[0] * 15, y0 + 3.8, c.z - f[1] * 15]), (look = [c.x + f[0] * 4, y0 + 1.2, c.z + f[1] * 4]), (fov = 52));
       else if (sh === "side") ((pos = [c.x + sx * 22 + f[0] * 4, y0 + 6.5, c.z + sz * 22 + f[1] * 4]), (look = [c.x, y0 + 1.2, c.z]), (fov = 26));
       else if (sh === "front") ((pos = [c.x + f[0] * 7.5, y0 + 0.9, c.z + f[1] * 7.5]), (look = [c.x - f[0] * 4, y0 + 1.3, c.z - f[1] * 4]), (fov = 50));
       else if (sh === "heli") ((pos = [c.x - f[0] * 16 + sx * 6, y0 + 14, c.z - f[1] * 16 + sz * 6]), (look = [c.x + f[0] * 10, y0, c.z + f[1] * 10]), (fov = 50));
@@ -4582,7 +4583,7 @@ const GAME_CONFIG = {
       P.cut || !P.cp
         ? ((P.cut = !1), (P.cp = pos.slice()), (P.cl = look.slice()))
         : ((P.cp[0] += (pos[0] - P.cp[0]) * lerp), (P.cp[1] += (pos[1] - P.cp[1]) * lerp), (P.cp[2] += (pos[2] - P.cp[2]) * lerp),
-          (P.cl[0] += (look[0] - P.cl[0]) * 0.35), (P.cl[1] += (look[1] - P.cl[1]) * 0.35), (P.cl[2] += (look[2] - P.cl[2]) * 0.35));
+          (P.cl[0] += (look[0] - P.cl[0]) * Math.min(1, lerp * 1.5)), (P.cl[1] += (look[1] - P.cl[1]) * Math.min(1, lerp * 1.5)), (P.cl[2] += (look[2] - P.cl[2]) * Math.min(1, lerp * 1.5)));
       o.position.set(P.cp[0], P.cp[1], P.cp[2]);
       o.lookAt(P.cl[0], P.cl[1], P.cl[2]);
       merCxFov(fov);
@@ -4681,6 +4682,7 @@ const GAME_CONFIG = {
     var M = (-c.r * Math.PI) / 180;
     a.cang = Math.atan2(rig.fwdZ * Math.sin(M), rig.fwdZ * Math.cos(M));
     /* Director: cut every few seconds, or when a trackside camera has been passed. */
+    P.r = r;
     P.shotT += r;
     var passed = !1;
     if (P.fix && P.kind === "track") {
