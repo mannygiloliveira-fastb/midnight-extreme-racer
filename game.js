@@ -4738,7 +4738,7 @@ const GAME_CONFIG = {
     var d = t.cine;
     if (!d) return;
     !r.f1 && r.t > 0.45 && ((r.f1 = 1), merCxAnim(d.querySelector(".mer-cx-flash"), "go"));
-    !r.f2 && r.phase === "B" && ((r.f2 = 1), d.classList.add("mer-out", "lines"), merCxAnim(d.querySelector(".mer-cx-flash"), "go"));
+    !r.f2 && r.phase === "B" && ((r.f2 = 1), d.classList.add("mer-out"), merCxAnim(d.querySelector(".mer-cx-flash"), "go"));
   }
   /* Test hook, only with ?cxtest in the address: window.__merCx.lap(ms, bestMs) fakes a lap
      through the track checkpoints and fires the finish line moment. */
@@ -13117,7 +13117,7 @@ const GAME_CONFIG = {
     on("card-b", !1);
     on("card-c", !1);
     var sl = merIntroEl("intro-sl");
-    sl && sl.classList.toggle("on", tt < MER_I.C2 - 0.3);
+    sl && sl.classList.remove("on");
     try { It(); zn(); ye(); } catch (e) { window.console && console.warn("MER intro loop", e && e.stack ? e.stack : e); }
     requestAnimationFrame(merIntroLoop);
   }
