@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Midnight Racer">
+  <meta name="theme-color" content="#000000">
+  <meta name="screen-orientation" content="landscape">
+  <title>Midnight Extreme Racer</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js" crossorigin>
+</head>
+<body>
+
+  <!-- Shown on phones held upright. The game plays in landscape. -->
+  <div id="rotate" class="mer-rotate" aria-live="polite">
+    <div class="mer-rotate-phone"></div>
+    <p class="mer-rotate-t">TURN YOUR PHONE SIDEWAYS</p>
+    <p class="mer-rotate-s">Midnight Extreme Racer plays in landscape. For the full screen view on iPhone, tap Share, then Add to Home Screen, and open it from there.</p>
+  </div>
+
+  <!-- 3D scene host. game.js adds the WebGL canvas here and sets the lc-open, lc-walking and lc-driving state classes. -->
+  <div id="game" class="mer-host lc-three">
+
+    <!-- Start screen -->
+    <section id="title-overlay" class="mer-title" aria-labelledby="title-heading">
+      <h1 id="title-heading" class="mer-sr">Midnight Extreme Racer</h1>
+      <div class="mer-boot" id="boot" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100">
+        <div class="mer-boot-row"><span id="boot-label" class="mer-boot-label">Starting engine</span><span id="boot-pct" class="mer-boot-pct">0%</span></div>
+        <div class="mer-boot-bar"><i id="boot-fill"></i></div>
+      </div>
+      <div class="mer-title-actions">
+        <button type="button" id="enter-btn" class="mer-enter">PRESS START</button>
+      </div>
+    </section>
+
+
+    <!-- Cinematic intro -->
+    <div id="intro" class="mer-intro" hidden aria-hidden="true">
+      <div class="mer-bar mer-bar-top"></div>
+      <div class="mer-bar mer-bar-bot"></div>
+      <div class="mer-speedlines" id="intro-sl"></div>
+      <div class="mer-flash" id="intro-flash"></div>
+      <div class="mer-card mer-card-a" id="card-a"><div class="mer-streaks"></div><div class="mer-lock"><span class="mer-c1">MIDNIGHT</span><span class="mer-c2">EXTREME RACER</span></div><div class="mer-badge"><b>TIME TRIAL</b><em id="card-best">No best time yet</em></div></div>
+      <div class="mer-card mer-card-b" id="card-b"><span class="mer-b1">THE STREETS ARE YOURS AFTER DARK</span></div>
+      <div class="mer-card mer-card-c" id="card-c"><span>PICK YOUR MODE</span><em>Customize your car, then start the race</em></div>
+      <button type="button" id="intro-skip" class="mer-skip">SKIP INTRO <b>ENTER</b></button>
+    </div>
+
+    <!-- Crosshair and car prompt (walk mode) -->
+    <div id="crosshair" class="mer-crosshair" hidden></div>
+    <div id="car-prompt" class="mer-prompt" hidden role="status" aria-live="polite">
+      <span class="mer-key">E</span>
+      <span class="mer-t-pc">Click car door to get in &amp; race</span>
+      <span class="mer-t-touch">Tap car door to race</span>
+    </div>
+
+    <!-- 3D showroom menu -->
+    <div id="sh-hint" class="mer-swipe" hidden aria-hidden="true"><i></i><span>Swipe to rotate</span><i></i></div>
+    <aside id="garage-hud" class="mer-garage-hud mer-showpanel" hidden aria-label="Showroom menu">
+      <div class="mer-sp-title"><b>MIDNIGHT</b><span>EXTREME RACER</span></div>
+      <div class="mer-modes mer-modes-one" role="group" aria-label="Race mode">
+        <button type="button" class="mer-modecard" data-mode="trial" aria-pressed="true"><i>TIME TRIAL</i><small id="best-line">No best time yet</small></button>
+      </div>
+      <div class="mer-sp-head">
+        <div class="mer-sp-h">Customize paint</div>
+        <div class="mer-finish" role="group" aria-label="Paint finish">
+          <button type="button" data-finish="gloss" aria-pressed="false">GLOSS</button>
+          <button type="button" data-finish="matte" aria-pressed="false">MATTE</button>
+          <button type="button" data-finish="metallic" aria-pressed="true">METALLIC</button>
+        </div>
+      </div>
+      <div class="mer-swatches" role="group" aria-label="Car paint color">
+        <button type="button" class="mer-swatch" data-color="silver" style="--c:#d3d8e0" aria-label="Silver" aria-pressed="true"></button>
+        <button type="button" class="mer-swatch" data-color="red" style="--c:#ff1428" aria-label="Red" aria-pressed="false"></button>
+        <button type="button" class="mer-swatch" data-color="blue" style="--c:#0b4dff" aria-label="Blue" aria-pressed="false"></button>
+        <button type="button" class="mer-swatch" data-color="black" style="--c:#14151a" aria-label="Black" aria-pressed="false"></button>
+        <button type="button" class="mer-swatch" data-color="white" style="--c:#ffffff" aria-label="White" aria-pressed="false"></button>
+        <button type="button" class="mer-swatch" data-color="yellow" style="--c:#ffc800" aria-label="Yellow" aria-pressed="false"></button>
+      </div>
+      <div class="mer-huebox"><span>HUE</span><input type="range" id="paint-hue" class="mer-hue" min="0" max="360" value="210" aria-label="Car color slider"></div>
+      <div class="mer-sp-h">Settings</div>
+      <div class="mer-pills">
+        <button type="button" id="btn-engine" class="mer-toggle" aria-pressed="true">Engine sound</button>
+        <button type="button" id="btn-music" class="mer-toggle" aria-pressed="true">Music</button>
+      </div>
+      <button type="button" id="btn-startrace" class="mer-startrace">START RACE</button>
+    </aside>
+    <div id="mer-fade" class="mer-fade"></div>
+
+    <!-- Loading and error states -->
+    <div id="loading" class="mer-loading" hidden>Loading garage...</div>
+    <div id="error" class="mer-error" hidden role="alert"></div>
+  </div>
+
+  <script>
+    /* Boot progress: one weighted bar for download, decoding, building and shader warm-up. */
+    (function () {
+      var W = { dl: 0.42, three: 0.08, car: 0.12, scene: 0.3, warm: 0.08 },
+        K = { dl: 0, three: 0, car: 0, scene: 0, warm: 0 },
+        shown = 0,
+        fill = document.getElementById("boot-fill"),
+        pct = document.getElementById("boot-pct"),
+        label = document.getElementById("boot-label"),
+        box = document.getElementById("boot");
+      window.MER_BOOT = {
+        set: function (k, v, l) {
+          K[k] = Math.max(K[k], v);
+          var p = 0, q;
+          for (q in W) p += W[q] * Math.min(1, K[q]);
+          shown = Math.max(shown, p);
+          if (fill) fill.style.width = (shown * 100).toFixed(1) + "%";
+          if (pct) pct.textContent = Math.round(shown * 100) + "%";
+          if (box) box.setAttribute("aria-valuenow", Math.round(shown * 100));
+          if (l && label) label.textContent = l;
+        },
+      };
+      var TOTAL = 2373344;
+      function viaTag() {
+        return new Promise(function (done) {
+          var s = document.createElement("script");
+          s.src = "car.js";
+          s.onload = s.onerror = function () { MER_BOOT.set("dl", 1); done(); };
+          document.head.appendChild(s);
+        });
+      }
+      MER_BOOT.set("dl", 0, "Downloading car");
+      window.MER_CAR_P = fetch("car.js")
+        .then(function (r) {
+          if (!r.ok || !r.body) throw 0;
+          var rd = r.body.getReader(), parts = [], got = 0;
+          function pump() {
+            return rd.read().then(function (x) {
+              if (x.done) return;
+              parts.push(x.value);
+              got += x.value.length;
+              MER_BOOT.set("dl", Math.min(0.99, got / TOTAL));
+              return pump();
+            });
+          }
+          return pump().then(function () {
+            var url = URL.createObjectURL(new Blob(parts, { type: "text/javascript" }));
+            return new Promise(function (res, rej) {
+              var s = document.createElement("script");
+              s.src = url;
+              s.onload = function () { MER_BOOT.set("dl", 1); res(); };
+              s.onerror = rej;
+              document.head.appendChild(s);
+            });
+          });
+        })
+        .catch(viaTag);
+    })();
+  </script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,778 @@
+:root {
+  --bg: #05060a;
+  --panel: rgba(12, 14, 20, 0.66);
+  --panel-solid: #0c0e14;
+  --line: rgba(255, 255, 255, 0.16);
+  --text: #f1f3f7;
+  --muted: #a3aab9;
+  --accent: #ff2d55;
+  --accent-2: #19d3ff;
+  --font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+.mer-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Host and canvas (full screen, 100vw x 100vh) ---------- */
+.mer-host {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+.mer-host > canvas:not([class*="lc-"]) {
+  filter: contrast(1.12) saturate(1.1);
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  outline: none;
+}
+.mer-host.is-pointer-target { cursor: pointer; }
+.mer-host.is-pointer-target .mer-crosshair {
+  border-color: var(--accent-2);
+  transform: translate(-50%, -50%) scale(1.6);
+}
+
+/* ---------- Start screen with the splash art ---------- */
+.mer-title {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: #05060a url("midnight-extreme-cover.jpg") center 40% / cover no-repeat;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+.mer-title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(3, 4, 8, 0) 62%, rgba(3, 4, 8, 0.5) 100%);
+  pointer-events: none;
+}
+.mer-title.is-leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.mer-title-actions {
+  position: absolute;
+  left: 50%;
+  bottom: 14%;
+  z-index: 1;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.mer-enter {
+  padding: 16px 44px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #fff;
+  background: rgba(10, 14, 24, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55), 0 0 28px rgba(25, 211, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.mer-enter:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: rgba(255, 45, 85, 0.72);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 34px rgba(255, 45, 85, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.mer-enter:disabled { cursor: progress; opacity: 0.7; }
+.mer-enter:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 4px; }
+
+/* ---------- Crosshair and car prompt ---------- */
+.mer-crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 20;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  pointer-events: none;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+}
+.mer-prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 27%;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 22px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transform: translateX(-50%);
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: mer-pop 0.2s ease;
+}
+.mer-key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #000;
+  background: #fff;
+  border-radius: 6px;
+}
+@keyframes mer-pop {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ---------- Garage corner HUD ---------- */
+.mer-garage-hud {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(340px, calc(100vw - 32px));
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.mer-hud-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mer-hud-label {
+  min-width: 44px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.mer-toggle,
+.mer-seg button {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.mer-toggle:hover,
+.mer-seg button:hover { background: rgba(255, 255, 255, 0.14); }
+.mer-toggle[aria-pressed="true"],
+.mer-seg button[aria-pressed="true"] {
+  color: #fff;
+  background: rgba(255, 45, 85, 0.34);
+  border-color: var(--accent);
+}
+.mer-toggle[aria-pressed="false"] { color: var(--muted); }
+.mer-seg { display: flex; gap: 4px; }
+
+.mer-swatches { display: flex; gap: 8px; }
+.mer-swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: var(--c);
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.mer-swatch:hover { transform: scale(1.12); }
+.mer-swatch[aria-pressed="true"] {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px var(--accent), 0 0 12px rgba(255, 255, 255, 0.3);
+}
+.mer-toggle:focus-visible,
+.mer-seg button:focus-visible,
+.mer-swatch:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+/* ---------- Loading and error ---------- */
+.mer-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  background: rgba(5, 6, 10, 0.7);
+}
+.mer-error {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 80;
+  width: min(460px, calc(100vw - 32px));
+  padding: 20px 24px;
+  font-size: 14px;
+  background: var(--panel-solid);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  transform: translate(-50%, -50%);
+}
+
+/* ===========================================================================
+   Engine elements built by game.js. The race HUD, cinematic bars, touch driving
+   controls and minimap carry their own styles in game.js. These rules cover the rest.
+   =========================================================================== */
+
+/* Panels from the old calculator view are not used in the game */
+#game.lc-three .lc-lsw,
+#game.lc-three .lc-tabs,
+#game.lc-three .lc-zoom,
+#game.lc-three .lc-expand,
+#game.lc-three .lc-backdrop,
+#game.lc-three .lc-dim,
+#game.lc-three .lc-howto,
+#game.lc-three .lc-howto-info,
+#game.lc-three .lc-walkbar,
+#game.lc-three .lc-racebtn,
+#game.lc-three .lc-pad { display: none !important; }
+
+/* Short messages ("Garage doors opening", driving tips) */
+.lc-three .lc-dragtip {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  z-index: 60;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 11px 20px;
+  font-size: 14px;
+  text-align: center;
+  background: rgba(8, 9, 14, 0.84);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.lc-three .lc-dragtip.lc-show { opacity: 1; }
+.lc-three .lc-dragtip:empty { display: none; }
+
+/* Controls hint when the player first walks in */
+.lc-three .lc-walkhint {
+  position: absolute;
+  left: 50%;
+  bottom: 9%;
+  z-index: 26;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  font-size: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.lc-three .lc-walkhint.lc-show { opacity: 1; }
+.lc-three .lc-walkhint i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-2);
+}
+
+/* Buttons shown while driving: Camera, Reset lap, Stop driving */
+.lc-three .lc-drivebar {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: auto !important;
+  height: auto !important;
+  max-height: calc(100% - 300px);
+  overflow: auto;
+  z-index: 5;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  transform: translateX(-50%);
+  background: rgba(8, 9, 14, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.lc-three.lc-driving:not(.lc-intro) .lc-drivebar { display: flex; }
+.lc-three .lc-drivebar span { padding: 0 10px; font-size: 12px; color: var(--muted); }
+.lc-three .lc-drivebar [data-rb] {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 0;
+  border-radius: 999px;
+}
+
+/* Touch walking stick */
+.lc-three .lc-joy {
+  display: none;
+  position: absolute;
+  left: max(18px, env(safe-area-inset-left));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 27;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(10, 12, 16, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  touch-action: none;
+}
+.lc-three .lc-joy i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+}
+.lc-three.lc-touch.lc-walking:not(.lc-driving) .lc-joy { display: block; }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 640px) {
+  .mer-garage-hud { right: 8px; bottom: 8px; width: calc(100vw - 16px); }
+  .mer-prompt { bottom: 32%; font-size: 14px; }
+  .mer-title-actions { bottom: 18%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* Reset and Time trial stay available in Free Drive */
+.lc-three.lc-driving .lc-drivebar [data-rb="reset"],
+.lc-three.lc-driving .lc-drivebar [data-rb="trial"] { display: inline-block; }
+.lc-three.lc-racing .lc-drivebar [data-rb="trial"] { display: none !important; }
+.lc-three .lc-cine .lc-cine-sk { padding: 10px 20px; font-size: 14px; background: rgba(0, 0, 0, 0.55); border-color: rgba(255, 255, 255, 0.7); }
+.lc-three .lc-cine .lc-cine-sk:hover { background: rgba(255, 255, 255, 0.25); }
+.lc-three .lc-cine.lc-cine-tv .lc-cine-hint { opacity: 0.85; }
+
+/* Car color slider */
+.mer-hue { -webkit-appearance: none; appearance: none; width: 170px; height: 10px; border-radius: 999px; outline: none; cursor: pointer;
+  background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); }
+.mer-hue::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid #111; box-shadow: 0 0 0 2px rgba(255,255,255,0.5); }
+.mer-hue::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid #111; }
+.mer-hue:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 4px; }
+
+/* Need for Speed / Midnight Club neon HUD */
+#game.lc-three .lc-drivebar { background: rgba(4, 12, 30, 0.8) !important; border: 1px solid #3d9bff !important; border-radius: 6px !important; box-shadow: 0 0 18px rgba(47, 140, 255, 0.4); }
+#game.lc-three .lc-drivebar span b { color: #6fd0ff !important; border-color: rgba(61, 155, 255, 0.7) !important; background: rgba(47, 140, 255, 0.16) !important; }
+#game.lc-three .lc-drivebar span em { color: #dbe9ff; }
+#game.lc-three .lc-drivebar [data-rb] { background: rgba(47, 140, 255, 0.14) !important; color: #e8f3ff !important; border: 1px solid #3d9bff !important; border-radius: 4px !important; font-style: italic; letter-spacing: 0.08em; text-transform: uppercase; }
+#game.lc-three .lc-drivebar [data-rb]:hover { background: rgba(61, 155, 255, 0.4) !important; box-shadow: 0 0 12px rgba(61, 155, 255, 0.7); }
+#game.lc-three .lc-drivebar [data-rb="stop"] { border-color: #ff3b2e !important; background: rgba(255, 59, 46, 0.16) !important; }
+:root { --accent: #2f8cff; --accent-2: #6fd0ff; }
+.mer-garage-hud, .mer-seg, .mer-toggle { border-color: rgba(61, 155, 255, 0.55); }
+
+/* Minimap stays fully inside the screen, bottom left */
+#game.lc-three:not(.lc-touchui) canvas.lc-minimap { left: 20px !important; bottom: 20px !important; right: auto !important; top: auto !important; width: 160px !important; height: 160px !important; transform: none !important; }
+
+/* Arcade speed lines */
+.mer-speedlines { position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0; transition: opacity 0.3s ease;
+  background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,0) 0deg 2.2deg, rgba(255,255,255,0.6) 2.5deg 2.8deg, rgba(255,255,255,0) 3.1deg 5.3deg);
+  -webkit-mask-image: radial-gradient(ellipse farthest-side at 50% 50%, transparent 76%, #000 100%); mask-image: radial-gradient(ellipse farthest-side at 50% 50%, transparent 76%, #000 100%);
+  animation: merSL 0.12s steps(2) infinite; }
+.mer-speedlines.on { opacity: 0.4; }
+@keyframes merSL { 0% { transform: rotate(0deg) scale(1.08); } 100% { transform: rotate(1.6deg) scale(1.08); } }
+
+/* Drift score popups */
+.mer-drift { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); z-index: 7; pointer-events: none; text-align: center; display: none; font-family: "Arial Black", Impact, Arial, sans-serif; }
+.mer-drift.on { display: block; }
+.mer-drift-score { font: 800 13px/1 Arial, sans-serif; letter-spacing: 0.2em; color: #6fd0ff; margin-bottom: 6px; text-shadow: 0 0 10px rgba(47,140,255,0.8); }
+.mer-drift-main { font-style: italic; font-weight: 900; font-size: clamp(30px, 5.5vw, 60px); line-height: 1; -webkit-text-stroke: 2px #04122e; paint-order: stroke fill; text-shadow: 0 0 22px rgba(47,140,255,0.9); }
+.mer-drift-mult { display: inline-block; margin-left: 12px; padding: 2px 12px; background: #ffcf1f; color: #111; font-style: italic; font-weight: 900; font-size: clamp(20px, 3.4vw, 38px); transform: skewX(-10deg); border-radius: 3px; vertical-align: middle; }
+.mer-drift-mult.pulse { animation: merPulse 0.35s ease-out; }
+@keyframes merPulse { 0% { transform: skewX(-10deg) scale(1.9); filter: brightness(2.2); } 100% { transform: skewX(-10deg) scale(1); filter: none; } }
+.mer-drift-bar { width: 190px; height: 5px; margin: 8px auto 0; background: rgba(255,255,255,0.18); transform: skewX(-20deg); overflow: hidden; }
+.mer-drift-bar i { display: block; height: 100%; background: #35b6ff; box-shadow: 0 0 8px #35b6ff; }
+.mer-bank { margin-top: 8px; font-style: italic; font-weight: 900; font-size: clamp(22px, 3.4vw, 36px); opacity: 0; -webkit-text-stroke: 1.5px #04122e; paint-order: stroke fill; text-shadow: 0 0 16px rgba(82,255,138,0.7); }
+.mer-bank.show { animation: merBank 1.7s ease-out forwards; }
+@keyframes merBank { 0% { opacity: 0; transform: translateY(12px) scale(0.7); } 14% { opacity: 1; transform: translateY(0) scale(1.18); } 70% { opacity: 1; transform: translateY(-6px) scale(1); } 100% { opacity: 0; transform: translateY(-28px) scale(1); } }
+.lc-three.lc-intro .mer-speedlines, .lc-three.lc-intro .mer-drift { display: none; }
+
+/* Keep every overlay inside the screen no matter what moves in the 3D view */
+html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; }
+.mer-host { contain: layout paint; }
+.mer-host::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.22) 100%); }
+
+/* HUD margins: at least 16px from every screen edge, scaled down on short windows */
+#game.lc-three:not(.lc-touchui) .lc-drivebar { top: 18px !important; right: 18px !important; max-height: calc(100% - 36px); }
+#game.lc-three:not(.lc-touchui) .lc-gauge { right: 18px !important; bottom: 18px !important; }
+#game.lc-three:not(.lc-touchui) canvas.lc-minimap { left: 20px !important; bottom: 20px !important; }
+@media (max-height: 760px) {
+  #game.lc-three:not(.lc-touchui) .lc-gauge { transform: scale(0.84); transform-origin: 100% 100%; }
+  #game.lc-three:not(.lc-touchui) .lc-drivebar { transform: scale(0.88) !important; transform-origin: 100% 0; }
+  #game.lc-three:not(.lc-touchui) canvas.lc-minimap { transform: scale(0.86) !important; transform-origin: 0 100%; }
+}
+
+
+/* ---------- Boot progress ---------- */
+.mer-boot { position: absolute; left: 50%; bottom: 13%; z-index: 2; width: min(540px, 82vw); transform: translateX(-50%); transition: opacity 0.4s ease, visibility 0.4s ease; text-shadow: 0 2px 12px rgba(0,0,0,0.9); }
+.mer-boot-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.mer-boot-label { font: 800 13px/1 Arial, sans-serif; letter-spacing: 0.28em; text-transform: uppercase; color: #cfd6e4; }
+.mer-boot-pct { font: italic 900 30px/1 "Arial Black", Impact, Arial, sans-serif; color: #fff; text-shadow: 0 0 16px rgba(25,211,255,0.7); }
+.mer-boot-bar { height: 8px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.18); border-radius: 2px; transform: skewX(-20deg); overflow: hidden; box-shadow: 0 0 22px rgba(0,0,0,0.6); }
+.mer-boot-bar i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, #19d3ff, #ff2d55); box-shadow: 0 0 14px rgba(25,211,255,0.9); transition: width 0.25s ease-out; }
+.mer-title:not(.is-ready) .mer-title-actions { visibility: hidden; }
+.mer-title.is-ready .mer-boot { opacity: 0; visibility: hidden; }
+.mer-title.is-ready .mer-enter { animation: merReady 1.4s ease-in-out infinite; }
+@keyframes merReady { 0%,100% { box-shadow: 0 10px 34px rgba(0,0,0,0.55), 0 0 22px rgba(25,211,255,0.3); } 50% { box-shadow: 0 10px 34px rgba(0,0,0,0.55), 0 0 44px rgba(255,45,85,0.7); } }
+
+/* ---------- Cinematic intro ---------- */
+.mer-intro { position: absolute; inset: 0; z-index: 60; pointer-events: none; overflow: hidden; font-family: "Arial Black", Impact, Arial, sans-serif; }
+.mer-bar { position: absolute; z-index: 2; left: 0; right: 0; height: 12vh; background: #000; transition: transform 0.7s cubic-bezier(.2,.8,.2,1); }
+.mer-bar-top { top: 0; transform: translateY(-100%); }
+.mer-bar-bot { bottom: 0; transform: translateY(100%); }
+.mer-intro.live .mer-bar-top, .mer-intro.live .mer-bar-bot { transform: none; }
+.mer-intro .mer-speedlines { z-index: 1; }
+.mer-flash { position: absolute; inset: 0; background: #cfeaff; opacity: 0; }
+.mer-flash.go { animation: merFlash 0.38s ease-out; }
+@keyframes merFlash { 0% { opacity: 0.85; } 100% { opacity: 0; } }
+.mer-card { position: absolute; z-index: 3; opacity: 0; visibility: hidden; }
+.mer-card.on { opacity: 1; visibility: visible; }
+.mer-card-a { left: 4%; top: 38%; transform: translateY(-50%); }
+.mer-card-a .mer-lock { position: relative; transform-origin: 0 60%; }
+.mer-card-a span { display: block; font-style: italic; font-weight: 900; text-transform: uppercase; white-space: nowrap; -webkit-text-fill-color: transparent; color: transparent; background-repeat: no-repeat; -webkit-background-clip: text; background-clip: text; }
+.mer-c1 { font-family: "Arial Black", Impact, Arial, sans-serif; font-size: clamp(40px, 8.6vw, 130px); line-height: 0.88; letter-spacing: 0.01em; transform: skewX(-12deg);
+  background-image: linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.95) 50%, transparent 58%), linear-gradient(180deg, #ffffff 8%, #00f5ff 92%); background-size: 260% 100%, 100% 100%;
+  filter: drop-shadow(2px 0 0 #04060c) drop-shadow(-2px 0 0 #04060c) drop-shadow(0 2px 0 #04060c) drop-shadow(0 -2px 0 #04060c) drop-shadow(0 0 22px rgba(0,245,255,0.75)); }
+.mer-c2 { font-family: "Arial Black", Impact, Arial, sans-serif; margin-top: 4px; font-size: clamp(20px, 4.5vw, 68px); line-height: 1; letter-spacing: 0.04em; transform: skewX(-12deg);
+  background-image: linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.9) 50%, transparent 58%), linear-gradient(180deg, #ffb700 15%, #ff4500 95%); background-size: 260% 100%, 100% 100%;
+  filter: drop-shadow(2px 0 0 #04060c) drop-shadow(-2px 0 0 #04060c) drop-shadow(0 2px 0 #04060c) drop-shadow(0 -2px 0 #04060c) drop-shadow(0 0 20px rgba(255,90,0,0.7)); }
+.mer-streaks { position: absolute; left: -12%; right: -22%; top: -6%; bottom: -6%; opacity: 0; pointer-events: none;
+  background: linear-gradient(90deg, rgba(0,245,255,0), rgba(0,245,255,0.6) 40%, rgba(0,245,255,0)) 0 12% / 100% 2px no-repeat, linear-gradient(90deg, rgba(0,245,255,0), rgba(0,245,255,0.45) 55%, rgba(0,245,255,0)) 0 34% / 80% 3px no-repeat,
+    linear-gradient(90deg, rgba(255,150,0,0), rgba(255,150,0,0.55) 45%, rgba(255,150,0,0)) 0 58% / 100% 2px no-repeat, linear-gradient(90deg, rgba(255,90,0,0), rgba(255,90,0,0.45) 60%, rgba(255,90,0,0)) 0 80% / 85% 3px no-repeat,
+    linear-gradient(90deg, rgba(0,245,255,0), rgba(0,245,255,0.4) 50%, rgba(0,245,255,0)) 0 96% / 70% 2px no-repeat; filter: blur(0.6px); }
+.mer-badge { display: inline-flex; flex-direction: row; align-items: center; gap: 14px; margin-top: 16px; padding: 9px 26px 9px 20px; transform: skewX(-12deg); background: rgba(8,14,26,0.85); border: 1px solid #19d3ff; border-left: 4px solid #19d3ff;
+  box-shadow: 0 0 18px rgba(25,211,255,0.5), inset 0 0 14px rgba(25,211,255,0.14); opacity: 0; }
+.mer-badge b { font: italic 900 clamp(15px, 2.4vw, 30px)/1.1 "Arial Black", Impact, Arial, sans-serif; letter-spacing: 0.06em; color: #fff; text-shadow: 0 0 10px rgba(25,211,255,0.7); }
+.mer-badge em { font: italic 700 clamp(11px, 1.6vw, 20px)/1.3 Arial, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: #ffc83a; padding-left: 14px; border-left: 2px solid #ffb700; text-shadow: 0 0 10px rgba(255,170,0,0.5); }
+.mer-card-a.on .mer-lock { animation: merSlam 0.33s cubic-bezier(.2,.9,.25,1) both; }
+.mer-card-a.on .mer-c1, .mer-card-a.on .mer-c2 { animation: merGlint 0.95s ease-out 0.38s both; }
+.mer-card-a.on .mer-streaks { animation: merStreak 0.8s ease-out 0.1s both; }
+.mer-card-a.on .mer-badge { animation: merBadgeIn 0.4s cubic-bezier(.1,.9,.2,1) 0.5s both; }
+.mer-card-a.out { transform: translate(-120%, -50%); opacity: 0; transition: transform 0.38s cubic-bezier(.65,0,.95,.45), opacity 0.38s ease-in; }
+@keyframes merSlam { 0% { transform: scale(1.55); opacity: 0; } 12% { opacity: 1; } 76% { transform: scale(1); } 84% { transform: translate(-5px, 3px); } 92% { transform: translate(5px, -3px); } 100% { transform: translate(0, 0); opacity: 1; } }
+@keyframes merGlint { from { background-position: 135% 0, 0 0; } to { background-position: -35% 0, 0 0; } }
+@keyframes merStreak { 0% { opacity: 0; transform: translateX(60px); } 30% { opacity: 1; } 100% { opacity: 0.55; transform: translateX(-30px); } }
+@keyframes merBadgeIn { from { opacity: 0; transform: skewX(-12deg) translateX(-60px); } to { opacity: 1; transform: skewX(-12deg) translateX(0); } }
+.mer-card-b { left: 0; right: 0; bottom: 19%; text-align: center; transition: opacity 0.6s ease; }
+.mer-card-b span { font: italic 900 clamp(14px, 2.2vw, 28px)/1.2 "Arial Black", Impact, Arial, sans-serif; letter-spacing: 0.3em; color: #fff; text-shadow: 0 0 18px rgba(25,211,255,0.8); }
+.mer-card-c { left: 0; right: 0; bottom: 18%; text-align: center; transition: opacity 0.6s ease; }
+.mer-card-c span { display: block; font: italic 900 clamp(26px, 5vw, 70px)/1 "Arial Black", Impact, Arial, sans-serif; color: #ffcf1f; -webkit-text-stroke: 2px #1a1200; paint-order: stroke fill; text-shadow: 0 0 26px rgba(255,170,20,0.7); }
+.mer-card-c em { display: block; margin-top: 10px; font: 700 clamp(12px, 1.6vw, 18px)/1 Arial, sans-serif; letter-spacing: 0.3em; text-transform: uppercase; color: #dfe6f3; }
+.mer-skip { position: absolute; right: 20px; bottom: calc(12vh + 14px); z-index: 5; pointer-events: auto; padding: 9px 16px; font: 800 12px/1 Arial, sans-serif; letter-spacing: 0.22em; color: #fff; background: rgba(8,10,16,0.55); border: 1px solid rgba(255,255,255,0.4); border-radius: 3px; transform: skewX(-12deg); backdrop-filter: blur(6px); }
+.mer-skip b { margin-left: 8px; padding: 2px 6px; font-size: 10px; background: #fff; color: #000; border-radius: 2px; }
+.mer-skip:hover { background: rgba(255,45,85,0.7); }
+#game.mer-intro-on .lc-walkhint, #game.mer-intro-on .lc-zoom, #game.mer-intro-on .mer-crosshair, #game.mer-intro-on .mer-prompt, #game.mer-intro-on .mer-garage-hud { display: none !important; }
+
+/* ---------- Need for Speed Underground intro look: neon blue, orange, chrome ---------- */
+.mer-bar-top { border-bottom: 2px solid #19d3ff; box-shadow: 0 2px 22px rgba(25, 211, 255, 0.55); }
+.mer-bar-bot { border-top: 2px solid #19d3ff; box-shadow: 0 -2px 22px rgba(25, 211, 255, 0.55); }
+.mer-flash { background: #d8f4ff; }
+.mer-card-b .mer-b1 { display: block; width: fit-content; margin: 0 auto; padding: 0 0 10px; font: italic 900 clamp(14px, 2.6vw, 34px)/1.1 "Arial Black", Impact, Arial, sans-serif; letter-spacing: 0.22em; color: #fff; border-bottom: 3px solid #19d3ff; text-shadow: 0 0 18px rgba(25, 211, 255, 0.9); box-shadow: 0 10px 22px -12px rgba(25, 211, 255, 0.9); }
+.mer-card-c span { color: #ff9d1c; text-shadow: 0 0 22px rgba(255, 140, 20, 0.85); }
+
+/* ---------- Phones: landscape play, safe areas, rotate prompt ---------- */
+html, body { height: 100vh; height: 100dvh; background: #000; -webkit-text-size-adjust: 100%; overscroll-behavior: none; touch-action: none; }
+.mer-host { padding: 0; }
+.mer-rotate { display: none; position: fixed; inset: 0; z-index: 9999; background: radial-gradient(ellipse at 50% 40%, #06142a 0%, #000 70%); color: #fff; text-align: center; align-items: center; justify-content: center; flex-direction: column; padding: 28px; font-family: "Arial Black", Impact, Arial, sans-serif; }
+.mer-rotate-phone { width: 64px; height: 112px; border: 4px solid #fff; border-radius: 14px; margin-bottom: 26px; animation: merRot 2.4s ease-in-out infinite; box-shadow: 0 0 24px rgba(25, 211, 255, 0.7); }
+@keyframes merRot { 0%, 25% { transform: rotate(0deg); } 65%, 100% { transform: rotate(-90deg); } }
+.mer-rotate-t { margin: 0 0 12px; font-style: italic; font-size: 22px; letter-spacing: 0.08em; color: #ff9d1c; text-shadow: 0 0 16px rgba(255, 140, 20, 0.8); }
+.mer-rotate-s { margin: 0; max-width: 320px; font: 600 14px/1.5 Arial, sans-serif; color: #cfd6e4; }
+@media (orientation: portrait) and (pointer: coarse) and (max-width: 900px) { .mer-rotate { display: flex; } }
+
+@media (pointer: coarse) {
+  .mer-host, .mer-title, .mer-intro { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .mer-enter { min-height: 56px; padding: 0 44px; font-size: 20px; }
+  .mer-skip { right: max(20px, env(safe-area-inset-right)); padding: 12px 18px; }
+  .mer-skip b { display: none; }
+}
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 480px) {
+  .mer-bar { height: 9vh; }
+  .mer-skip { bottom: calc(9vh + 10px); }
+  .mer-c1 { font-size: clamp(26px, 9vh, 54px); }
+  .mer-c2 { font-size: clamp(14px, 5vh, 30px); }
+  .mer-card-b .mer-b1 { font-size: clamp(12px, 4.2vh, 22px); }
+  .mer-card-c span { font-size: clamp(18px, 7vh, 34px); }
+  .mer-card-c em { font-size: 10px; margin-top: 6px; }
+  .mer-card-b { bottom: 14%; }
+  .mer-card-c { bottom: 14%; }
+  .mer-boot { bottom: 9%; }
+  .mer-title-actions { bottom: 16%; }
+  .mer-garage-hud { right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); width: min(360px, 46vw); }
+  .mer-prompt { bottom: 26%; font-size: 13px; }
+}
+
+/* ---------- Compact phone HUD (short landscape screens) ---------- */
+@media (pointer: coarse) and (max-height: 520px) {
+  #game.lc-three .lc-cine-tt { font-size: clamp(18px, 6vh, 30px) !important; left: max(5%, env(safe-area-inset-left)) !important; bottom: calc(12% + 6px) !important; }
+  #game.lc-three .lc-cine-tt small, #game.lc-three .lc-cine-tt em { font-size: 9px !important; letter-spacing: 0.24em !important; margin: 4px 0 !important; }
+  #game.lc-three .lc-cine-sk { font-size: 11px !important; padding: 7px 14px !important; }
+  #game.lc-three .lc-cine-hint { font-size: 10px !important; }
+  #game.lc-three.lc-touchui canvas.lc-minimap { width: 72px !important; height: 72px !important; top: max(6px, env(safe-area-inset-top)) !important; left: max(8px, env(safe-area-inset-left)) !important; }
+  #game.lc-three.lc-touchui .lc-drivebar { top: max(6px, env(safe-area-inset-top)) !important; left: calc(max(8px, env(safe-area-inset-left)) + 80px) !important; right: auto !important; width: auto !important; flex-direction: row !important; align-items: center !important; gap: 4px !important; padding: 4px !important; transform: none !important; }
+  #game.lc-three.lc-touchui .lc-drivebar button { width: auto !important; min-width: 0 !important; padding: 5px 9px !important; font-size: 10px !important; letter-spacing: 0.05em !important; line-height: 1 !important; }
+  #game.lc-three.lc-touchui .lc-gauge { top: max(4px, env(safe-area-inset-top)) !important; right: max(8px, env(safe-area-inset-right)) !important; width: 92px !important; height: 112px !important; }
+  #game.lc-three.lc-touchui .lc-rhud { top: 4px !important; }
+  #game.lc-three.lc-touchui .lc-tc-steer { width: min(36vw, 250px) !important; height: 66px !important; bottom: max(10px, env(safe-area-inset-bottom)) !important; left: max(12px, env(safe-area-inset-left)) !important; }
+  #game.lc-three.lc-touchui .lc-tc-steer i { width: 52px !important; height: 52px !important; margin: -26px 0 0 -26px !important; }
+  #game.lc-three.lc-touchui .lc-tc-r { bottom: max(10px, env(safe-area-inset-bottom)) !important; right: max(12px, env(safe-area-inset-right)) !important; gap: 6px !important; }
+  #game.lc-three.lc-touchui .lc-tc [data-tc=hb], #game.lc-three.lc-touchui .lc-tc [data-tc=boost] { width: 44px !important; height: 44px !important; font-size: 10px !important; }
+  #game.lc-three.lc-touchui .lc-tc [data-tc=brk] { width: 56px !important; height: 64px !important; font-size: 11px !important; }
+  #game.lc-three.lc-touchui .lc-tc [data-tc=gas] { width: 62px !important; height: 84px !important; font-size: 12px !important; }
+  #game.lc-three .mer-drift { top: 30% !important; transform: translateX(-50%) scale(0.6) !important; transform-origin: 50% 0; }
+  #game.lc-three .lc-bignum { font-size: clamp(60px, 26vh, 130px) !important; -webkit-text-stroke-width: 3px !important; }
+}
+
+
+/* ---------- Garage prompt, start button, joystick, HUD dividers ---------- */
+.mer-prompt { bottom: auto; top: 22%; }
+.mer-t-touch, .mer-startrow { display: none; }
+@media (pointer: coarse) {
+  .mer-key, .mer-t-pc { display: none; }
+  .mer-t-touch { display: inline; }
+  .mer-startrow { display: flex; }
+  .mer-startrace { width: 100%; padding: 11px 14px; border: 0; border-radius: 8px; font: italic 900 15px/1 "Arial Black", Arial, sans-serif; letter-spacing: 0.1em; color: #fff; background: linear-gradient(180deg, #2f8cff, #1c5fd0); box-shadow: 0 0 16px rgba(47, 140, 255, 0.6); }
+}
+@media (pointer: coarse) and (max-height: 520px) {
+  .mer-prompt { top: 16%; bottom: auto; font-size: 13px; padding: 9px 18px; }
+  .mer-startrace { padding: 8px 10px; font-size: 12px; }
+}
+#game.mer-intro-on .lc-joy { display: none !important; }
+.lc-rh-label { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 0; }
+.lc-rh-sep { display: inline-block; width: 2px; height: 0.95em; margin: 0 0.8em; background: currentColor; opacity: 0.55; transform: skewX(-20deg); }
+@media (pointer: coarse) and (max-height: 520px) {
+  #game.lc-three.lc-touchui .lc-tc-r { gap: 16px 14px !important; }
+  #game.lc-three.lc-touchui .lc-tc-steer { width: min(30vw, 200px) !important; height: 58px !important; }
+  #game.lc-three.lc-touchui .lc-tc-steer i { width: 46px !important; height: 46px !important; margin: -23px 0 0 -23px !important; }
+  #game.lc-three.lc-touchui .lc-gauge { width: 124px !important; height: 148px !important; }
+}
+
+
+/* ---------- Toast placement, timer spacing ---------- */
+.lc-three.lc-driving .lc-dragtip { top: auto !important; bottom: 24%; }
+.lc-rh-label { margin-bottom: 10px; }
+@media (pointer: coarse) and (max-height: 520px) {
+  .lc-three.lc-driving .lc-dragtip { bottom: 26%; font-size: 12px; padding: 8px 14px; }
+  .lc-rh-label { margin-bottom: 7px; }
+}
+
+/* ---------- 3D showroom menu ---------- */
+#game.mer-showroom .lc-joy, #game.mer-showroom .lc-walkhint, #game.mer-showroom .lc-zoom, #game.mer-showroom .mer-crosshair, #game.mer-showroom .mer-prompt, #game.mer-showroom .lc-howto, #game.mer-showroom .lc-howto-info, #game.mer-showroom .lc-lsw, #game.mer-showroom .lc-expand, #game.mer-showroom .lc-tc, #game.mer-showroom .lc-dragtip { display: none !important; }
+#game .mer-garage-hud.mer-showpanel {
+  position: absolute; top: max(12px, env(safe-area-inset-top)); bottom: max(12px, env(safe-area-inset-bottom));
+  right: max(12px, env(safe-area-inset-right)); left: auto; width: clamp(300px, 38vw, 520px);
+  display: flex; flex-direction: column; gap: 10px; padding: 18px 18px 16px; overflow-y: auto; box-sizing: border-box;
+  background: linear-gradient(160deg, rgba(14, 28, 48, 0.78), rgba(6, 10, 20, 0.86));
+  border: 1px solid rgba(25, 211, 255, 0.55); border-radius: 22px;
+  box-shadow: 0 0 28px rgba(25, 211, 255, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 18px 50px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 30;
+}
+#game .mer-garage-hud.mer-showpanel:not([hidden]) { animation: merPanelIn 0.55s cubic-bezier(.2, .8, .2, 1); }
+@keyframes merPanelIn { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.mer-sp-title { font: italic 900 clamp(18px, 3.4vh, 30px)/0.95 "Arial Black", Impact, Arial, sans-serif; text-transform: uppercase; }
+.mer-sp-title b { display: block; color: #ff9d1c; text-shadow: 0 0 16px rgba(255, 140, 20, 0.55); }
+.mer-sp-title span { display: block; color: #fff; letter-spacing: 0.02em; }
+.mer-sp-h { font: 800 11px/1 Arial, sans-serif; letter-spacing: 0.16em; text-transform: uppercase; color: #dfe9f7; }
+.mer-sp-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mer-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mer-modecard { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 88px; padding: 10px 6px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); border: 2px solid rgba(255, 255, 255, 0.16); color: #9aa6b8; }
+.mer-modecard i { font: italic 900 clamp(15px, 2.6vh, 22px)/1 "Arial Black", Impact, Arial, sans-serif; text-align: center; }
+.mer-modecard small { font: 700 11px/1 Arial, sans-serif; letter-spacing: 0.04em; opacity: 0.9; }
+.mer-modecard[aria-pressed="true"] { color: #9eecff; background: rgba(25, 211, 255, 0.14); border-color: #19d3ff; box-shadow: 0 0 22px rgba(25, 211, 255, 0.55), inset 0 0 18px rgba(25, 211, 255, 0.2); }
+.mer-finish { display: flex; padding: 3px; gap: 2px; border-radius: 8px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.14); }
+.mer-finish button { padding: 5px 8px; border-radius: 6px; font: 800 10px/1 Arial, sans-serif; letter-spacing: 0.08em; color: #9aa6b8; background: transparent; border: 0; }
+.mer-finish button[aria-pressed="true"] { color: #fff; background: rgba(255, 255, 255, 0.2); }
+.mer-showpanel .mer-swatches { gap: 12px; }
+.mer-showpanel .mer-swatch { width: 32px; height: 32px; }
+.mer-huebox { display: flex; align-items: center; gap: 10px; font: 800 11px/1 Arial, sans-serif; letter-spacing: 0.16em; color: #dfe9f7; }
+.mer-huebox .mer-hue { flex: 1; width: auto; }
+.mer-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.mer-pills .mer-toggle { flex: 1 1 auto; padding: 9px 10px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
+.mer-pills .mer-toggle[aria-pressed="true"] { background: rgba(25, 211, 255, 0.2); border-color: #19d3ff; color: #fff; }
+.mer-showpanel .mer-startrace { display: block; width: 100%; margin-top: auto; flex-shrink: 0; padding: 0 20px; min-height: 58px; border: 0; border-radius: 12px; font: italic 900 clamp(18px, 3.4vh, 26px)/1 "Arial Black", Impact, Arial, sans-serif; letter-spacing: 0.04em; color: #fff; background: linear-gradient(100deg, #ff9d1c 0%, #ff4d2e 55%, #d630c8 100%); box-shadow: 0 0 26px rgba(255, 110, 40, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.4); animation: merStartGlow 1.6s ease-in-out infinite; }
+@keyframes merStartGlow { 0%, 100% { box-shadow: 0 0 22px rgba(255, 110, 40, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4); } 50% { box-shadow: 0 0 38px rgba(255, 110, 40, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.4); } }
+.mer-startrow { display: none !important; }
+.mer-swipe { position: absolute; left: 4%; bottom: max(7%, env(safe-area-inset-bottom)); z-index: 29; display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-radius: 999px; background: rgba(8, 12, 22, 0.55); border: 1px solid rgba(255, 255, 255, 0.22); font: 700 12px/1 Arial, sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: #e8f1ff; pointer-events: none; }
+.mer-swipe i { display: block; width: 0; height: 0; border: 5px solid transparent; }
+.mer-swipe i:first-child { border-right-color: #19d3ff; }
+.mer-swipe i:last-child { border-left-color: #19d3ff; }
+.mer-fade { position: absolute; inset: 0; z-index: 80; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
+.mer-fade.on { opacity: 1; }
+@media (max-height: 520px) {
+  #game .mer-garage-hud.mer-showpanel { gap: 5px; padding: 9px 12px 10px; border-radius: 16px; width: clamp(280px, 38vw, 520px); }
+  .mer-sp-title { font-size: 15px; }
+  .mer-sp-h { font-size: 8.5px; }
+  .mer-modes { gap: 7px; }
+  .mer-modecard { min-height: 50px; gap: 4px; padding: 5px 4px; border-radius: 9px; }
+  .mer-modecard i { font-size: 12px; }
+  .mer-modecard small { font-size: 8.5px; }
+  .mer-finish button { padding: 4px 6px; font-size: 8px; }
+  .mer-showpanel .mer-swatches { gap: 8px; }
+  .mer-showpanel .mer-swatch { width: 22px; height: 22px; }
+  .mer-huebox { font-size: 8.5px; gap: 8px; }
+  .mer-pills { gap: 5px; }
+  .mer-pills .mer-toggle { padding: 5px 7px; font-size: 9.5px; }
+  .mer-showpanel .mer-startrace { min-height: 38px; font-size: 15px; border-radius: 9px; }
+  .mer-swipe { padding: 6px 12px; font-size: 10px; }
+}
+
+
+/* ---------- Polish pass: timer pill, mobile prompt, touch grid ---------- */
+#game .lc-rhud { top: max(8px, env(safe-area-inset-top)) !important; }
+#game .lc-rh-box > div:first-child { display: flex; flex-direction: column; align-items: center; min-width: 0 !important; }
+#game .lc-rh-time { order: -1; font-size: 30px !important; padding: 7px 24px 6px; border-radius: 14px; background: linear-gradient(180deg, rgba(18, 26, 40, 0.78), rgba(6, 10, 18, 0.84)); border: 1px solid rgba(80, 200, 255, 0.55); box-shadow: 0 0 14px rgba(40, 140, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); -webkit-text-stroke: 0 !important; text-shadow: 0 0 12px rgba(80, 170, 255, 0.85) !important; letter-spacing: 0.04em !important; }
+#game .lc-rh-bar { display: none !important; }
+#game .lc-rh-label { order: 2; margin: 6px 0 0 !important; font-size: 12px !important; }
+#game .lc-rh-pips, #game .lc-rh-best { order: 3; }
+#game.lc-three.lc-touchui .lc-rhud { top: max(8px, env(safe-area-inset-top)) !important; }
+@media (pointer: coarse) and (max-height: 520px) {
+  #game .lc-rh-time { font-size: 24px !important; padding: 5px 18px 4px; border-radius: 12px; }
+  #game .lc-rh-label { font-size: 10px !important; margin-top: 4px !important; }
+}
+.lc-three.lc-driving.lc-touchui .lc-dragtip { top: auto !important; bottom: max(16px, env(safe-area-inset-bottom)) !important; width: min(300px, 34vw); max-width: none; white-space: normal; line-height: 1.35; font-size: 14px; padding: 10px 16px; border-radius: 12px; border: 1px solid rgba(110, 190, 255, 0.45); background: rgba(8, 14, 26, 0.82); }
+@media (pointer: coarse) and (max-height: 520px) {
+  .lc-three.lc-driving.lc-touchui .lc-dragtip { font-size: 12px; padding: 8px 12px; width: min(280px, 34vw); }
+}
+#game.lc-three.lc-touchui .lc-tc-r { right: max(16px, env(safe-area-inset-right)) !important; bottom: max(16px, env(safe-area-inset-bottom)) !important; gap: 16px 14px !important; }
+#game.lc-three.lc-touchui .lc-tc-steer { left: max(16px, env(safe-area-inset-left)) !important; bottom: max(16px, env(safe-area-inset-bottom)) !important; }
+#game.lc-three.lc-touchui .lc-tc [data-tc=hb], #game.lc-three.lc-touchui .lc-tc [data-tc=boost] { border: 3px solid #3d9bff; background: radial-gradient(circle at 50% 35%, rgba(30, 90, 170, 0.8), rgba(8, 24, 56, 0.8)); box-shadow: 0 0 10px rgba(61, 155, 255, 0.6); }
+#game.lc-three.lc-touchui .lc-tc [data-tc=gas] { border-color: #37e07c; box-shadow: 0 0 10px rgba(55, 224, 124, 0.5); }
+#game.lc-three.lc-touchui .lc-tc [data-tc=brk] { border-color: #ff5a4d; box-shadow: 0 0 10px rgba(255, 90, 77, 0.5); }
+@media (pointer: coarse) and (max-height: 520px) {
+  #game.lc-three.lc-touchui .lc-tc [data-tc=gas], #game.lc-three.lc-touchui .lc-tc [data-tc=brk] { width: 64px !important; height: 66px !important; }
+  #game.lc-three.lc-touchui .lc-tc [data-tc=hb], #game.lc-three.lc-touchui .lc-tc [data-tc=boost] { width: 52px !important; height: 52px !important; }
+}
+
+/* ---------- Loading pulse and readable checkpoint line ---------- */
+.mer-enter.is-loading, .mer-startrace.is-loading { animation: merPulse 1s ease-in-out infinite; pointer-events: none; }
+@keyframes merPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+#game .lc-rh-label { font-size: 14px !important; text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.8); letter-spacing: 0.06em; }
+@media (max-height: 500px) { #game .lc-rh-label { font-size: 12px !important; } }
+/* Checkpoints hidden from the HUD */
+#game .lc-rh-pips { display: none !important; }
+/* Single mode: Time Trial only */
+.mer-modes.mer-modes-one { grid-template-columns: 1fr; }
+.mer-modes-one .mer-modecard { cursor: default; }
+
+/* ---------- Gamer HUD type: bigger, heavier, glowing ---------- */
+#game .lc-rh-time { font-family: "Arial Black", Impact, "Helvetica Neue", Arial, sans-serif !important; font-style: italic !important; font-weight: 900 !important; font-size: 38px !important; color: #ffffff !important; text-shadow: 0 0 14px rgba(0, 200, 255, 0.95), 0 0 30px rgba(0, 140, 255, 0.6), 0 3px 0 rgba(0, 0, 0, 0.7) !important; }
+#game .lc-rh-best { font-family: "Arial Black", Impact, Arial, sans-serif !important; font-style: italic; font-size: 16px !important; letter-spacing: 0.12em !important; color: #ffffff !important; margin: 6px 0 0 !important; text-shadow: 0 0 10px rgba(0, 200, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.95) !important; }
+#game .lc-rh-label { font-family: "Arial Black", Impact, Arial, sans-serif !important; font-style: italic !important; font-size: 18px !important; letter-spacing: 0.1em !important; text-shadow: 0 0 12px currentColor, 0 2px 4px rgba(0, 0, 0, 0.95) !important; }
+#game .lc-rh-medal { display: none !important; }
+#game .lc-rh-drift { font-family: "Arial Black", Impact, Arial, sans-serif !important; font-size: 24px !important; letter-spacing: 0.06em !important; text-shadow: 0 0 14px rgba(255, 200, 40, 0.9), 0 3px 0 rgba(0, 0, 0, 0.7) !important; }
+#game .mer-drift-score { font-family: "Arial Black", Impact, Arial, sans-serif !important; font-style: italic; font-size: 22px !important; letter-spacing: 0.14em !important; color: #8ff3ff !important; text-shadow: 0 0 12px rgba(0, 230, 255, 0.9), 0 2px 4px rgba(0, 0, 0, 0.95) !important; }
+.lc-three.lc-driving .lc-dragtip { font-family: "Arial Black", Impact, Arial, sans-serif !important; font-style: italic; font-size: 20px !important; letter-spacing: 0.06em; text-transform: uppercase; color: #fff !important; background: linear-gradient(90deg, rgba(0, 140, 255, 0.25), rgba(8, 14, 26, 0.9) 30%, rgba(8, 14, 26, 0.9) 70%, rgba(0, 140, 255, 0.25)) !important; border: 1px solid rgba(0, 220, 255, 0.7) !important; box-shadow: 0 0 18px rgba(0, 180, 255, 0.45) !important; text-shadow: 0 0 10px rgba(0, 200, 255, 0.8); }
+@media (pointer: coarse) and (max-height: 520px) {
+  #game .lc-rh-time { font-size: 32px !important; padding: 5px 20px 4px !important; }
+  #game .lc-rh-best { font-size: 14px !important; }
+  #game .lc-rh-label { font-size: 15px !important; }
+  #game .lc-rh-drift { font-size: 20px !important; }
+  #game .mer-drift-score { font-size: 18px !important; }
+  .lc-three.lc-driving.lc-touchui .lc-dragtip { font-size: 16px !important; width: auto !important; max-width: 46vw !important; padding: 8px 20px !important; }
+}
+
+/* ---------- Phone race buttons: a tidy column under the minimap, out of the HUD's way ---------- */
+@media (pointer: coarse) {
+  #game.lc-three.lc-touchui .lc-drivebar {
+    top: calc(max(6px, env(safe-area-inset-top)) + 84px) !important;
+    left: max(8px, env(safe-area-inset-left)) !important; right: auto !important;
+    flex-direction: column !important; align-items: stretch !important; gap: 8px !important;
+    padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; width: 74px !important;
+  }
+  #game.lc-three.lc-touchui .lc-drivebar span { display: none !important; }
+  #game.lc-three.lc-touchui .lc-drivebar button {
+    width: 74px !important; min-height: 34px !important; padding: 0 6px !important;
+    font: italic 900 10px/1 "Arial Black", Impact, Arial, sans-serif !important; letter-spacing: 0.06em !important;
+    border-radius: 10px !important; border: 2px solid #3d9bff !important;
+    background: radial-gradient(circle at 50% 30%, rgba(30, 90, 170, 0.75), rgba(6, 16, 36, 0.85)) !important;
+    box-shadow: 0 0 10px rgba(61, 155, 255, 0.55) !important; color: #e8f6ff !important;
+  }
+  #game.lc-three.lc-touchui .lc-drivebar [data-rb="stop"] { border-color: #ff4a3d !important; background: radial-gradient(circle at 50% 30%, rgba(170, 40, 30, 0.75), rgba(36, 8, 8, 0.85)) !important; box-shadow: 0 0 10px rgba(255, 74, 61, 0.55) !important; }
+}
+
+/* ---------- No minimap ---------- */
+#game canvas.lc-minimap { display: none !important; }
+
+/* ---------- Phone race buttons: top-left column (minimap removed), never clipped ---------- */
+@media (pointer: coarse) {
+  #game.lc-three.lc-touchui .lc-drivebar { top: max(8px, env(safe-area-inset-top)) !important; max-height: none !important; overflow: visible !important; height: auto !important; }
+}
+
+/* ---------- No drift: hide the button and drift scoring ---------- */
+#game .lc-tc [data-tc=hb] { display: none !important; }
+#game .mer-drift, #game .lc-rh-drift { display: none !important; }
+#game.lc-three.lc-touchui .lc-tc-r { grid-template-columns: auto auto !important; }
+#game.lc-three.lc-touchui .lc-tc [data-tc=boost] { grid-column: 1 / span 2; justify-self: center; }
+
+/* ---------- Steering pad look: glowing rail and cyan knob (original size kept) ---------- */
+#game.lc-three.lc-touchui .lc-tc-steer {
+  background: linear-gradient(90deg, rgba(0, 200, 255, 0.16), rgba(8, 14, 28, 0.55) 30%, rgba(8, 14, 28, 0.55) 70%, rgba(0, 200, 255, 0.16)) !important;
+  border: 2px solid rgba(80, 200, 255, 0.55) !important; box-shadow: 0 0 16px rgba(0, 170, 255, 0.35), inset 0 0 14px rgba(0, 0, 0, 0.5) !important;
+}
+#game.lc-three.lc-touchui .lc-tc-steer::before { border-right-color: rgba(120, 220, 255, 0.75) !important; transition: border-color 0.12s; }
+#game.lc-three.lc-touchui .lc-tc-steer::after { border-left-color: rgba(120, 220, 255, 0.75) !important; transition: border-color 0.12s; }
+#game.lc-three.lc-touchui .lc-tc-steer.mer-steer-l::before { border-right-color: #00f5ff !important; filter: drop-shadow(0 0 6px #00f5ff); }
+#game.lc-three.lc-touchui .lc-tc-steer.mer-steer-r::after { border-left-color: #00f5ff !important; filter: drop-shadow(0 0 6px #00f5ff); }
+#game.lc-three.lc-touchui .lc-tc-steer i {
+  background: radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.95), rgba(170, 230, 255, 0.85) 55%, rgba(60, 160, 230, 0.85)) !important;
+  border: 3px solid #00e5ff !important; box-shadow: 0 0 14px rgba(0, 220, 255, 0.8), 0 3px 10px rgba(0, 0, 0, 0.5) !important;
+  transition: transform 0.12s ease-out;
+}
+#game.lc-three.lc-touchui .lc-tc-steer.mer-steer-on i { transition: none; }
+

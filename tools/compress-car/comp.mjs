@@ -1,0 +1,15 @@
+import { NodeIO } from '@gltf-transform/core';
+import { ALL_EXTENSIONS, EXTMeshoptCompression } from '@gltf-transform/extensions';
+import { reorder } from '@gltf-transform/functions';
+import { MeshoptEncoder, MeshoptDecoder } from 'meshoptimizer';
+import fs from 'fs'; import zlib from 'zlib';
+await MeshoptEncoder.ready; await MeshoptDecoder.ready;
+const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.encoder': MeshoptEncoder, 'meshopt.decoder': MeshoptDecoder });
+const doc = await io.read('car_raw.glb');
+const mode = process.argv[2] || 'reorder';
+if (mode === 'reorder') await doc.transform(reorder({ encoder: MeshoptEncoder, target: 'size' }));
+doc.createExtension(EXTMeshoptCompression).setRequired(true).setEncoderOptions({ method: EXTMeshoptCompression.EncoderMethod.QUANTIZE });
+const out = await io.writeBinary(doc);
+fs.writeFileSync('car_mo_' + mode + '.glb', out);
+const gz = zlib.gzipSync(out, { level: 9 });
+console.log(mode, 'glb', out.length, 'gzip', gz.length, 'base64-of-gzip', Math.ceil(gz.length / 3) * 4);
