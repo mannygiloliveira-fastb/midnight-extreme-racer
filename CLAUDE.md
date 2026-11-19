@@ -78,3 +78,4 @@ The public beta link is a claude.ai artifact: https://claude.ai/artifact/LdyhWtD
 2. Portrait handling: "turn your phone" screen for racing, portrait showroom layout.
 3. Touch controls: bigger buttons, safe area margins, optional tilt steering, vibration on Android.
 4. Music (Suno track "Turbo Circuit") is on hold until Manny asks.
+
