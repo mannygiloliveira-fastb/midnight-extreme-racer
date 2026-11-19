@@ -4277,7 +4277,7 @@ const GAME_CONFIG = {
         ((r = document.createElement("div")),
         (r.className = "lc-cine"),
         (r.innerHTML =
-          '<i class="lc-cine-t"></i><i class="lc-cine-b"></i><div class="lc-cine-tt"><small>TIME TRIAL</small>MIDNIGHT EXTREME RACER<em></em></div><div class="lc-cine-hint">Press Enter or Space to skip</div><button type="button" class="lc-cine-sk">Skip intro</button>'),
+          '<i class="lc-cine-t"></i><i class="lc-cine-b"></i><div class="mer-cx-sl"></div><div class="mer-cx-flash"></div><div class="lc-cine-tt mer-cx-st"><div class="mer-streaks"></div><div class="mer-lock"><span class="mer-c1">MIDNIGHT</span><span class="mer-c2">EXTREME RACER</span></div><div class="mer-badge"><b>TIME TRIAL</b><em></em></div></div><div class="lc-cine-hint">Press Enter or Space to skip</div><button type="button" class="lc-cine-sk">Skip intro</button>'),
         r.addEventListener("pointerdown", function (i) {
           i.stopPropagation();
         }),
@@ -4295,6 +4295,7 @@ const GAME_CONFIG = {
       ((r.querySelector("em").textContent = n.best
         ? "HIGH SCORE  " + Pn(n.best)
         : "SET THE FIRST HIGH SCORE"),
+        r.classList.remove("mer-out", "lines", "lc-on"),
         (r.style.display = "block"),
         r.offsetWidth,
         r.classList.add("lc-on"));
@@ -4387,7 +4388,7 @@ const GAME_CONFIG = {
         ((g.spin.rotation.x += (a.v * s * e) / g.R), g.front && (g.steer.rotation.y = a.steer));
       }));
     var M = (-n.r * Math.PI) / 180;
-    ((a.cang = Math.atan2(s * Math.sin(M), s * Math.cos(M))), w0(e));
+    ((a.cang = Math.atan2(s * Math.sin(M), s * Math.cos(M))), merCxStartFx(r), w0(e));
   }
   function w0(e) {
     var a = t.drive,
@@ -4427,6 +4428,325 @@ const GAME_CONFIG = {
             (M = 1 - Math.exp(-2.4 * e))),
       r.look ? (o.position.lerp(v, M), r.look.lerp(w, M)) : (o.position.copy(v), (r.look = w.clone())),
       o.lookAt(r.look));
+  }
+  /* ---------- Race cinematics: finish line moment, slow motion beats, instant replay ----------
+     Slow motion and the replay push the lap clock (co().t0) forward, so they never cost the
+     player time. The camera hands back to the chase camera through drive.camFrom. */
+  var MERCX = { k: 1, slow: null, cam: null, rp: null, offer: 0, dom: null, lastLap: null, finT: 0, beat: { dr: 0, cd: 0, boostLap: !1 } };
+  function merCxDom() {
+    if (MERCX.dom && MERCX.dom.parentNode) return MERCX.dom;
+    var d = document.createElement("div");
+    d.className = "mer-cx";
+    d.innerHTML =
+      '<i class="mer-cx-bar mer-cx-top"></i><i class="mer-cx-bar mer-cx-bot"></i>' +
+      '<div class="mer-cx-sl"></div><div class="mer-cx-flash"></div>' +
+      '<div class="mer-cx-fin"><div class="mer-lock"><span class="mer-c2 mer-cx-lbl">LAP COMPLETE</span><span class="mer-c1 mer-cx-time">0:00.000</span></div>' +
+      '<div class="mer-badge mer-cx-sub"><b></b><em></em></div></div>' +
+      '<div class="mer-cx-rec">NEW RECORD</div>' +
+      '<div class="mer-cx-tag"><i></i><b>REPLAY</b><span></span></div>' +
+      '<button type="button" class="mer-cx-btn mer-cx-watch">WATCH REPLAY <small>ENTER</small></button>' +
+      '<button type="button" class="mer-cx-btn mer-cx-skip">SKIP REPLAY <small>ENTER</small></button>';
+    d.addEventListener("pointerdown", function (e) {
+      e.target.closest && e.target.closest("button") && e.stopPropagation();
+    });
+    d.querySelector(".mer-cx-watch").addEventListener("click", function (e) {
+      (e.stopPropagation(), merCxReplayStart());
+    });
+    d.querySelector(".mer-cx-skip").addEventListener("click", function (e) {
+      (e.stopPropagation(), merCxReplayEnd());
+    });
+    t.host.appendChild(d);
+    return (MERCX.dom = d);
+  }
+  function merCxEl(c) {
+    return merCxDom().querySelector(c);
+  }
+  function merCxAnim(el, cls) {
+    el && (el.classList.remove(cls), void el.offsetWidth, el.classList.add(cls));
+  }
+  function merCxFlash() {
+    merCxAnim(merCxEl(".mer-cx-flash"), "go");
+  }
+  function merCxBars(on) {
+    merCxDom().classList.toggle("bars", !!on);
+  }
+  function merCxLines(on) {
+    merCxDom().classList.toggle("lines", !!on);
+  }
+  function merCxOffer(until) {
+    MERCX.offer = until;
+    merCxDom().classList.toggle("offer", !!until);
+  }
+  function merCxSlow(k, hold, ease) {
+    MERCX.slow = { k: k, hold: hold, ease: ease, t: 0 };
+  }
+  /* Runs once per race frame with the real frame time. Returns the game frame time. */
+  function merCxStep(a, r) {
+    var S = MERCX.slow,
+      k = 1,
+      R = co();
+    if (S) {
+      S.t += r;
+      if (S.t < S.hold) k = S.k;
+      else if (S.t < S.hold + S.ease) {
+        var u = (S.t - S.hold) / S.ease;
+        k = S.k + (1 - S.k) * u * u * (3 - 2 * u);
+      } else ((MERCX.slow = null), merCxLines(!1), MERCX.cam || merCxBars(!1));
+    }
+    MERCX.k = k;
+    R && R.state === "running" && k < 1 && (R.t0 += r * (1 - k) * 1000);
+    t.raceOn && R && R.state === "running" && merCxBeats(a, r);
+    MERCX.cam && ((MERCX.cam.t += r), MERCX.cam.t >= MERCX.cam.dur && merCxCamEnd());
+    MERCX.offer && performance.now() > MERCX.offer && merCxOffer(0);
+    return r * k;
+  }
+  /* Short slow motion beats on a long drift and on a full speed boost (once per lap). */
+  function merCxBeats(a, r) {
+    var B = MERCX.beat,
+      mph = Math.abs(a.v) * 0.6818;
+    B.cd = Math.max(0, B.cd - r);
+    B.dr = a.slip > 0.16 && mph > 45 && !a.off ? B.dr + r : 0;
+    if (B.cd > 0 || MERCX.slow || MERCX.cam) return;
+    if (B.dr > 0.9) ((B.dr = -1e9), merCxBeat(0.35, 0.55));
+    else if (a.boosting && mph > 150 && !B.boostLap) ((B.boostLap = !0), merCxBeat(0.42, 0.5));
+  }
+  function merCxBeat(k, hold) {
+    MERCX.beat.cd = 14;
+    merCxSlow(k, hold, 0.45);
+    merCxBars(!0);
+    merCxLines(!0);
+    merCxFlash();
+  }
+  /* Called by the lap timer the moment a counted lap crosses the line. */
+  function merCxLap(R, I, T) {
+    if (!t.drive) return;
+    var nb = !T || I < T,
+      L = (MERCX.lastLap = { rec: (R.rec || []).slice(), time: I, best: nb });
+    MERCX.beat.boostLap = !1;
+    merCxSlow(0.28, 1.5, 0.6);
+    MERCX.cam = { kind: "fin", t: 0, dur: 2.3 };
+    merCxBars(!0);
+    merCxLines(!0);
+    merCxFlash();
+    var d = merCxDom();
+    merCxEl(".mer-cx-time").textContent = Pn(I);
+    merCxEl(".mer-cx-lbl").textContent = nb ? (T ? "NEW HIGH SCORE" : "FIRST HIGH SCORE") : "LAP COMPLETE";
+    merCxEl(".mer-cx-sub b").textContent = nb ? (T ? "-" + ((T - I) / 1e3).toFixed(3) : "LAP 1") : "+" + ((I - T) / 1e3).toFixed(3);
+    merCxEl(".mer-cx-sub em").textContent = nb ? (T ? "FASTER THAN YOUR BEST" : "BEAT IT NEXT LAP") : "BEST " + Pn(T);
+    d.classList.toggle("nb", nb);
+    merCxAnim(merCxEl(".mer-cx-fin"), "on");
+    nb && T ? merCxAnim(merCxEl(".mer-cx-rec"), "on") : merCxEl(".mer-cx-rec").classList.remove("on");
+    clearTimeout(MERCX.finT);
+    MERCX.finT = setTimeout(function () {
+      MERCX.dom && (merCxEl(".mer-cx-fin").classList.remove("on"), merCxEl(".mer-cx-rec").classList.remove("on"));
+    }, 3400);
+    L.rec.length >= 90 && merCxOffer(performance.now() + 10000);
+  }
+  function merCxCamEnd() {
+    var a = t.drive;
+    MERCX.cam = null;
+    a && ((a.camFrom = { p: t.camera.position.clone(), q: t.camera.quaternion.clone() }), (a.blendT = 0), (a.fov = t.camera.fov));
+    MERCX.slow || merCxBars(!1);
+  }
+  function merCxFov(f) {
+    Math.abs(t.camera.fov - f) > 0.05 && ((t.camera.fov = f), t.camera.updateProjectionMatrix());
+  }
+  /* Nose direction of a car pose {x,z,r}. */
+  function merCxFwd(c, s) {
+    var ry = (-c.r * Math.PI) / 180;
+    return [s * Math.sin(ry), s * Math.cos(ry)];
+  }
+  /* Cinematic camera. Returns true when it placed the camera. */
+  function merCxCamDo(e) {
+    var c = ee[e.i],
+      car = t.carList[e.i],
+      y0 = car ? car.position.y : 0,
+      f = merCxFwd(c, e.rig.fwdZ),
+      sx = f[1],
+      sz = -f[0],
+      o = t.camera,
+      P = MERCX.rp;
+    if (P) {
+      var sh = P.kind,
+        pos,
+        look,
+        fov,
+        lerp = 0.22;
+      if (sh === "chase") ((pos = [c.x - f[0] * 11, y0 + 2.6, c.z - f[1] * 11]), (look = [c.x + f[0] * 6, y0 + 1.5, c.z + f[1] * 6]), (fov = 55));
+      else if (sh === "side") ((pos = [c.x + sx * 22 + f[0] * 4, y0 + 6.5, c.z + sz * 22 + f[1] * 4]), (look = [c.x, y0 + 1.2, c.z]), (fov = 26));
+      else if (sh === "front") ((pos = [c.x + f[0] * 7.5, y0 + 0.9, c.z + f[1] * 7.5]), (look = [c.x - f[0] * 4, y0 + 1.3, c.z - f[1] * 4]), (fov = 50));
+      else if (sh === "heli") ((pos = [c.x - f[0] * 16 + sx * 6, y0 + 14, c.z - f[1] * 16 + sz * 6]), (look = [c.x + f[0] * 10, y0, c.z + f[1] * 10]), (fov = 50));
+      else ((pos = P.fix), (look = [c.x, y0 + 1.2, c.z]), (fov = sh === "line" ? 24 : 38), (lerp = 1));
+      P.cut || !P.cp
+        ? ((P.cut = !1), (P.cp = pos.slice()), (P.cl = look.slice()))
+        : ((P.cp[0] += (pos[0] - P.cp[0]) * lerp), (P.cp[1] += (pos[1] - P.cp[1]) * lerp), (P.cp[2] += (pos[2] - P.cp[2]) * lerp),
+          (P.cl[0] += (look[0] - P.cl[0]) * 0.35), (P.cl[1] += (look[1] - P.cl[1]) * 0.35), (P.cl[2] += (look[2] - P.cl[2]) * 0.35));
+      o.position.set(P.cp[0], P.cp[1], P.cp[2]);
+      o.lookAt(P.cl[0], P.cl[1], P.cl[2]);
+      merCxFov(fov);
+      return !0;
+    }
+    var C = MERCX.cam;
+    if (!C) return !1;
+    /* Finish line: swing from the front three quarter round to the rear quarter. */
+    var u = Math.min(1, C.t / C.dur),
+      w = u * u * (3 - 2 * u),
+      an = (0.6 + 2.0 * w) * (e.rig.fwdZ < 0 ? 1 : -1),
+      ca = Math.cos(an),
+      sa = Math.sin(an),
+      dx = f[0] * ca - f[1] * sa,
+      dz = f[0] * sa + f[1] * ca,
+      dist = 7.5 + 2.5 * w;
+    o.position.set(c.x + dx * dist, y0 + 1.3 + 0.9 * w, c.z + dz * dist);
+    o.lookAt(c.x, y0 + 1.5, c.z);
+    merCxFov(48);
+    return !0;
+  }
+  function merCxReplayStart() {
+    var a = t.drive,
+      L = MERCX.lastLap;
+    if (!a || !L || MERCX.rp || !t.raceOn || a.intro || L.rec.length < 90) return;
+    var c = ee[a.i],
+      keep = {};
+    ["v", "pv", "steer", "cang", "phi", "slip", "nitro", "boosting", "look", "fov", "thrIn"].forEach(function (k) {
+      keep[k] = a[k];
+    });
+    merCxOffer(0);
+    MERCX.slow = null;
+    MERCX.cam = null;
+    MERCX.rp = { rec: L.rec, n: L.rec.length / 3, s: 0, save: { x: c.x, z: c.z, r: c.r, a: keep }, i: -1, shotT: 9, kind: "chase", cut: !0, cp: null, cl: null, fix: null, last: !1 };
+    var g = Ks();
+    g && ((g.visible = !1), merGhostTrail(g, !1));
+    merCxDom().classList.add("rp");
+    merCxEl(".mer-cx-tag span").textContent = Pn(L.time);
+    merCxBars(!0);
+    merCxLines(!1);
+    merCxFlash();
+    t.host.classList.add("mer-cx-replay");
+  }
+  function merCxReplayEnd() {
+    var P = MERCX.rp,
+      a = t.drive;
+    if (!P) return;
+    MERCX.rp = null;
+    if (a) {
+      var c = ee[a.i],
+        S = P.save,
+        k;
+      ((c.x = S.x), (c.z = S.z), (c.r = S.r));
+      for (k in S.a) a[k] = S.a[k];
+      (zr(a.i), (a.camFrom = null), (a.blendT = 0));
+    }
+    MERCX.dom && MERCX.dom.classList.remove("rp");
+    t.host.classList.remove("mer-cx-replay");
+    merCxBars(!1);
+    merCxFlash();
+  }
+  var MERCX_SHOTS = ["chase", "track", "side", "front", "heli", "track", "side"];
+  /* Replays the last lap: about twice real speed with TV style cuts, then slows down for the line. */
+  function merCxReplayTick(r) {
+    var a = t.drive,
+      P = MERCX.rp,
+      R = co();
+    if (!a || !P || !t.raceOn) return merCxReplayEnd();
+    R && R.state === "running" && (R.t0 += r * 1000);
+    var D = P.rec,
+      last = P.n - 1 - P.s < 22,
+      sp = last ? 0.55 : 2.1;
+    P.s += r * 10 * sp;
+    if (P.s >= P.n - 1.001) return merCxReplayEnd();
+    var i0 = Math.floor(P.s),
+      u = P.s - i0,
+      j = i0 * 3,
+      dA = ((D[j + 5] - D[j + 2] + 540) % 360) - 180,
+      c = ee[a.i],
+      car = t.carList[a.i],
+      rig = a.rig,
+      x = D[j] + (D[j + 3] - D[j]) * u,
+      z = D[j + 1] + (D[j + 4] - D[j + 1]) * u,
+      v = Math.sqrt(Math.pow(D[j + 3] - D[j], 2) + Math.pow(D[j + 4] - D[j + 1], 2)) / 0.1,
+      om = (dA * Math.PI) / 180 / 0.1,
+      st = v > 1 ? Math.max(-0.6, Math.min(0.6, Math.atan((wt * 0.85 * om) / v) * rig.fwdZ * -1)) : 0,
+      pv = a.v;
+    ((c.x = x), (c.z = z), (c.r = D[j + 2] + dA * u));
+    ((a.v = v), (a.thrIn = 1), (a.slip = 0), (a.boosting = !1), (a.steer += (st - a.steer) * Math.min(1, 8 * r)));
+    zr(a.i);
+    Ys(a, c, car, rig, r, (a.v - pv) / Math.max(r, 0.001));
+    a.pv = a.v;
+    rig.wheels.forEach(function (g) {
+      ((g.spin.rotation.x += (a.v * rig.fwdZ * r * sp) / g.R), g.front && (g.steer.rotation.y = a.steer));
+    });
+    var M = (-c.r * Math.PI) / 180;
+    a.cang = Math.atan2(rig.fwdZ * Math.sin(M), rig.fwdZ * Math.cos(M));
+    /* Director: cut every few seconds, or when a trackside camera has been passed. */
+    P.shotT += r;
+    var passed = !1;
+    if (P.fix && P.kind === "track") {
+      var fw = merCxFwd(c, rig.fwdZ);
+      passed = (P.fix[0] - x) * fw[0] + (P.fix[2] - z) * fw[1] < -14;
+    }
+    if (last && P.kind !== "line") {
+      var k = P.n - 1,
+        fe0 = merCxFwd({ r: D[k * 3 + 2] }, rig.fwdZ);
+      P.kind = "line";
+      P.fix = [D[k * 3] + fe0[1] * 8 + fe0[0] * 4, (car ? car.position.y : 0) + 0.8, D[k * 3 + 1] - fe0[0] * 8 + fe0[1] * 4];
+      (P.cut = !0), merCxFlash();
+    } else if (!last && (P.shotT > 2.8 || passed)) {
+      P.i = (P.i + 1) % MERCX_SHOTS.length;
+      P.kind = MERCX_SHOTS[P.i];
+      P.shotT = 0;
+      P.cut = !0;
+      if (P.kind === "track") {
+        var q = Math.min(P.n - 1, Math.floor(P.s + 10 * sp * 0.9)) * 3,
+          fq = merCxFwd({ r: D[q + 2] }, rig.fwdZ),
+          side = P.i % 2 ? 1 : -1;
+        P.fix = [D[q] + fq[1] * 8 * side, (car ? car.position.y : 0) + 2.4, D[q + 1] - fq[0] * 8 * side];
+      }
+    }
+  }
+  /* Race start scene: arcade title slam, flash and speed lines, synced to the scene phases. */
+  function merCxStartFx(r) {
+    var d = t.cine;
+    if (!d) return;
+    !r.f1 && r.t > 0.45 && ((r.f1 = 1), merCxAnim(d.querySelector(".mer-cx-flash"), "go"));
+    !r.f2 && r.phase === "B" && ((r.f2 = 1), d.classList.add("mer-out", "lines"), merCxAnim(d.querySelector(".mer-cx-flash"), "go"));
+  }
+  /* Test hook, only with ?cxtest in the address: window.__merCx.lap(ms, bestMs) fakes a lap
+     through the track checkpoints and fires the finish line moment. */
+  if (/[?&]cxtest/.test(location.search))
+    window.__merCx = {
+      st: MERCX,
+      lap: function (ms, best) {
+        var n = t.track, d = t.drive;
+        if (!n || !d) return "not racing";
+        var P0 = n.pts, N = P0.length, b = 0, bd = 1e18, i, s, sp = 70 * 0.1, rec = [];
+        for (i = 0; i < N; i++) { var q = Math.pow(P0[i][0] - n.S[0], 2) + Math.pow(P0[i][1] - n.S[1], 2); q < bd && ((bd = q), (b = i)); }
+        var dir = (P0[(b + 1) % N][0] - P0[b][0]) * n.T[0] + (P0[(b + 1) % N][1] - P0[b][1]) * n.T[1] >= 0 ? 1 : -1, pts = [];
+        for (i = 0; i <= N; i++) pts.push(P0[(((b + dir * i) % N) + N) % N]);
+        for (i = 0; i < pts.length - 1; i++) {
+          var ax = pts[i][0], az = pts[i][1], dx = pts[i + 1][0] - ax, dz = pts[i + 1][1] - az, L = Math.hypot(dx, dz) || 1,
+            rr = Math.round((-Math.atan2(dx * d.rig.fwdZ, dz * d.rig.fwdZ) * 180) / Math.PI);
+          for (s = 0; s < L; s += sp) rec.push(ax + (dx * s) / L, az + (dz * s) / L, rr);
+        }
+        merCxLap({ rec: rec }, ms || 61234, best || 0);
+        return rec.length / 3 + " samples";
+      },
+      replay: function () { merCxReplayStart(); return !!MERCX.rp; },
+      game: function () { return t; },
+    };
+  /* Race ended or was left: drop every cinematic state. */
+  function merCxReset() {
+    MERCX.rp && merCxReplayEnd();
+    MERCX.slow = null;
+    MERCX.cam = null;
+    MERCX.k = 1;
+    MERCX.lastLap = null;
+    MERCX.beat = { dr: 0, cd: 0, boostLap: !1 };
+    clearTimeout(MERCX.finT);
+    if (MERCX.dom) {
+      (merCxOffer(0), merCxBars(!1), merCxLines(!1));
+      (merCxEl(".mer-cx-fin").classList.remove("on"), merCxEl(".mer-cx-rec").classList.remove("on"));
+    }
   }
   function merBoard(txt) {
     var b = t && t.mFx && t.mFx.board;
@@ -6266,6 +6586,7 @@ const GAME_CONFIG = {
         t.raceNight && ((zt = t.raceNight.prev), (t.raceNight = null), ya()),
         t.drive && t.drive.intro && (t.drive.intro = null),
         t.cine && Fn(!1),
+        merCxReset(),
         t.rvis && t.rvis.userData.ghost && ((t.rvis.userData.ghost.visible = !1), merGhostTrail(t.rvis.userData.ghost, !1)),
         To());
     }
@@ -6424,6 +6745,7 @@ const GAME_CONFIG = {
                 : (ue = "LAP +" + ((I - T) / 1e3).toFixed(3) + " OFF THE BEST"),
               h.lap > i.bestDrift && (i.bestDrift = h.lap),
               d0(i),
+              merCxLap(i, I, T),
               (i.flash = {
                 txt: ue,
                 col: cn,
@@ -6791,6 +7113,11 @@ const GAME_CONFIG = {
           ($o(a, !0), nl(a), a.intro || It(), zn(), ye(), (a.raf = requestAnimationFrame(as)));
           return;
         }
+        if (MERCX.rp) {
+          (merCxReplayTick(r), $o(a, !0), nl(a), It(), zn(), ye(), (a.raf = requestAnimationFrame(as)));
+          return;
+        }
+        r = merCxStep(a, r);
         (E0(r), $o(a, !0), Ts(a), nl(a), ol(a, r), It(), zn(), ye(), (a.raf = requestAnimationFrame(as)));
       }
     }
@@ -9907,6 +10234,14 @@ const GAME_CONFIG = {
           if (t && t.drive && a.classList.contains("lc-open")) {
             Pt.boost = merBoostOk(d);
             if (/^F\d+$/.test(d.code)) return;
+            if (MERCX.rp) {
+              d.code !== "Escape" && d.preventDefault();
+              (d.code === "Enter" || d.code === "NumpadEnter" || d.code === "Space") && !d.repeat && merCxReplayEnd();
+              if (d.code !== "Escape") return;
+            } else if (MERCX.offer && (d.code === "Enter" || d.code === "NumpadEnter") && !d.repeat) {
+              (d.preventDefault(), merCxReplayStart());
+              return;
+            }
             if (t.drive.intro) {
               d.code !== "Escape" && d.preventDefault();
               (d.code === "Enter" || d.code === "Space" || d.code === "NumpadEnter") && !d.repeat && M0(!0);
@@ -11803,6 +12138,7 @@ const GAME_CONFIG = {
   function It() {
     if (MER.intro && merIntroCam()) return;
     if (MER.showroom && merShowroomCam()) return;
+    if (t.drive && !t.drive.intro && (MERCX.rp || MERCX.cam) && merCxCamDo(t.drive)) return;
     if (t.drive) {
       var e = t.drive,
         a = ee[e.i],

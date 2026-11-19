@@ -50,6 +50,15 @@ The public beta link is a claude.ai artifact: https://claude.ai/artifact/LdyhWtD
 - The garage lux spotlights fade on as the car reaches the driveway. Headlights stay on, only haze and glare are softened near the garage.
 - Skip with Enter or the Skip pill.
 
+## Race cinematics (MERCX block in game.js, styles at the end of styles.css)
+
+- Finish line: `merCxLap()` is called from the lap timer in `k0`. About 1.5 s slow motion, camera swing round the car, lap time card (gold with a NEW RECORD stamp on a new best), then a WATCH REPLAY button for 10 s.
+- Slow motion beats in `merCxBeats()`: a long drift (0.9 s of slip at speed) and a boost above 150 mph (once per lap). 14 s cooldown.
+- Instant replay: `merCxReplayStart()` replays the last lap from the same 100 ms recording the ghost uses, at about 2x with TV cuts (chase, trackside, side, front, heli), then slows for a low shot at the line. Enter or the button starts and skips it. Race HUD is hidden while it plays.
+- Slow motion and the replay push `co().t0` forward, so they never cost lap time.
+- Race start scene (`Fn`, `x0`) uses the arcade title. `merCxStartFx()` flashes on the title slam and slides it out with speed lines when the car drives off.
+- Test hook: open the game with `?cxtest` in the address, start a race, then run `__merCx.lap(ms, bestMs)` in the console to fake a lap along the track centre line, and `__merCx.replay()` to start the replay. It does nothing without `?cxtest`.
+
 ## Showroom
 
 - `merShowroomEnter` puts the hero car nose-in via `merNoseIn(true)`. `merShowroomExit` restores the nose-out spot so the race start is unchanged.
@@ -57,8 +66,7 @@ The public beta link is a claude.ai artifact: https://claude.ai/artifact/LdyhWtD
 
 ## Open to-do list
 
-1. Restyle the race start cutscene (car backing out) to match the arcade intro title.
-2. Phone quality pass: auto quality tiers from frame rate, no shadows and lower pixel ratio on phones, fewer lights, draw distance on phones.
-3. Portrait handling: "turn your phone" screen for racing, portrait showroom layout.
-4. Touch controls: bigger buttons, safe area margins, optional tilt steering, vibration on Android.
-5. Music (Suno track "Turbo Circuit") is on hold until Manny asks.
+1. Phone quality pass: auto quality tiers from frame rate, no shadows and lower pixel ratio on phones, fewer lights, draw distance on phones.
+2. Portrait handling: "turn your phone" screen for racing, portrait showroom layout.
+3. Touch controls: bigger buttons, safe area margins, optional tilt steering, vibration on Android.
+4. Music (Suno track "Turbo Circuit") is on hold until Manny asks.

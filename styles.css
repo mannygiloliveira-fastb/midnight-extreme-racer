@@ -776,3 +776,65 @@ html, body { height: 100vh; height: 100dvh; background: #000; -webkit-text-size-
 }
 #game.lc-three.lc-touchui .lc-tc-steer.mer-steer-on i { transition: none; }
 
+
+/* ---------- Race cinematics: finish line moment, slow motion beats, replay, race start title ---------- */
+#game .mer-cx { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; font-family: "Arial Black", Impact, Arial, sans-serif; }
+#game .mer-cx-bar { position: absolute; left: 0; right: 0; height: 11vh; background: #000; transition: transform 0.45s cubic-bezier(.2,.8,.2,1); }
+#game .mer-cx-top { top: 0; transform: translateY(-104%); border-bottom: 2px solid #19d3ff; box-shadow: 0 2px 22px rgba(25,211,255,0.55); }
+#game .mer-cx-bot { bottom: 0; transform: translateY(104%); border-top: 2px solid #19d3ff; box-shadow: 0 -2px 22px rgba(25,211,255,0.55); }
+#game .mer-cx.bars .mer-cx-bar { transform: none; }
+#game .mer-cx-sl { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.25s ease;
+  background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,0) 0deg 2.2deg, rgba(255,255,255,0.6) 2.5deg 2.8deg, rgba(255,255,255,0) 3.1deg 5.3deg);
+  -webkit-mask-image: radial-gradient(ellipse farthest-side at 50% 50%, transparent 76%, #000 100%); mask-image: radial-gradient(ellipse farthest-side at 50% 50%, transparent 76%, #000 100%);
+  animation: merSL 0.12s steps(2) infinite; }
+#game .mer-cx.lines .mer-cx-sl, #game .lc-cine.lines .mer-cx-sl { opacity: 0.45; }
+#game .mer-cx-flash { position: absolute; inset: 0; background: #d8f4ff; opacity: 0; pointer-events: none; }
+#game .mer-cx-flash.go { animation: merFlash 0.38s ease-out; }
+
+/* Finish line card */
+#game .mer-cx-fin { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-58%); text-align: center; opacity: 0; visibility: hidden; transition: opacity 0.35s ease, visibility 0s linear 0.35s; }
+#game .mer-cx-fin.on { opacity: 1; visibility: visible; transition: opacity 0.1s ease; }
+#game .mer-cx-fin .mer-lock { display: block; width: fit-content; margin: 0 auto; transform-origin: 50% 60%; }
+#game .mer-cx-fin.on .mer-lock { animation: merSlam 0.33s cubic-bezier(.2,.9,.25,1) 0.12s both; }
+#game .mer-cx-fin span, #game .mer-cx-st span { display: block; font-style: italic; font-weight: 900; text-transform: uppercase; white-space: nowrap; -webkit-text-fill-color: transparent; color: transparent; background-repeat: no-repeat; -webkit-background-clip: text; background-clip: text; }
+#game .mer-cx-fin .mer-cx-lbl { font-size: min(4.6vw, 7.5vh); margin: 0 0 0.12em; }
+#game .mer-cx-fin .mer-cx-time { font-size: min(13vw, 21vh); line-height: 0.95; letter-spacing: 0.02em; }
+#game .mer-cx-fin.on span { animation: merGlint 0.95s ease-out 0.45s both; }
+#game .mer-cx-fin .mer-badge { margin-top: 1.6vh; opacity: 0; }
+#game .mer-cx-fin.on .mer-badge { animation: merBadgeIn 0.4s cubic-bezier(.1,.9,.2,1) 0.5s both; }
+#game .mer-cx.nb .mer-cx-time { background-image: linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.95) 50%, transparent 58%), linear-gradient(180deg, #fff6c8 8%, #ffb700 92%);
+  filter: drop-shadow(2px 0 0 #04060c) drop-shadow(-2px 0 0 #04060c) drop-shadow(0 2px 0 #04060c) drop-shadow(0 -2px 0 #04060c) drop-shadow(0 0 24px rgba(255,180,0,0.8)); }
+#game .mer-cx-rec { position: absolute; left: 50%; top: calc(11vh + 3%); transform: translateX(-50%) skewX(-12deg); padding: 0.35em 1.1em; font: italic 900 min(3.4vw, 5.5vh)/1 "Arial Black", Impact, Arial, sans-serif; letter-spacing: 0.18em; color: #1a1000; background: linear-gradient(180deg, #ffe066, #ffaa00); box-shadow: 0 0 30px rgba(255,190,0,0.8); opacity: 0; white-space: nowrap; }
+#game .mer-cx-rec.on { animation: merCxRec 3.1s ease-out 0.25s both; }
+@keyframes merCxRec { 0% { opacity: 0; transform: translateX(-50%) skewX(-12deg) scale(2.2); } 10% { opacity: 1; transform: translateX(-50%) skewX(-12deg) scale(1); } 14% { transform: translateX(-50%) skewX(-12deg) scale(1.08); } 18% { transform: translateX(-50%) skewX(-12deg) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) skewX(-12deg) scale(1); } }
+
+/* Replay */
+#game .mer-cx-tag { position: absolute; left: max(18px, env(safe-area-inset-left)); top: calc(11vh + 12px); display: none; align-items: center; gap: 10px; color: #fff; font: italic 900 min(3vw, 5vh)/1 "Arial Black", Impact, Arial, sans-serif; letter-spacing: 0.14em; text-shadow: 0 0 14px rgba(25,211,255,0.8); }
+#game .mer-cx.rp .mer-cx-tag { display: flex; }
+#game.mer-cx-replay .lc-tc, #game.mer-cx-replay .lc-drivebar, #game.mer-cx-replay .lc-rhud, #game.mer-cx-replay .lc-gauge, #game.mer-cx-replay .lc-walkhint, #game.mer-cx-replay > .mer-speedlines { visibility: hidden !important; }
+#game .mer-cx-tag i { width: 0.6em; height: 0.6em; border-radius: 50%; background: #ff2a3d; box-shadow: 0 0 12px #ff2a3d; animation: merCxBlink 1s steps(2) infinite; }
+#game .mer-cx-tag span { font: 700 min(2.2vw, 3.8vh)/1 Arial, sans-serif; letter-spacing: 0.1em; color: #ffc83a; }
+@keyframes merCxBlink { 50% { opacity: 0.15; } }
+#game .mer-cx-btn { position: absolute; display: none; pointer-events: auto; padding: 12px 20px; border: 1px solid #19d3ff; border-left: 4px solid #19d3ff; background: rgba(8,14,26,0.88); color: #fff; font: italic 900 14px/1 "Arial Black", Impact, Arial, sans-serif; letter-spacing: 0.12em; box-shadow: 0 0 18px rgba(25,211,255,0.5); cursor: pointer; white-space: nowrap; }
+#game .mer-cx-btn small { margin-left: 8px; padding: 2px 6px; font: 700 10px/1 Arial, sans-serif; letter-spacing: 0; background: #fff; color: #000; border-radius: 2px; vertical-align: 1px; }
+#game .mer-cx-watch { left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%) skewX(-12deg); }
+#game .mer-cx.offer .mer-cx-watch { display: block; animation: merCxPop 0.35s cubic-bezier(.1,.9,.2,1) both; }
+#game .mer-cx.rp .mer-cx-watch { display: none; }
+#game .mer-cx-skip { right: max(18px, env(safe-area-inset-right)); bottom: calc(11vh + 12px); transform: skewX(-12deg); }
+#game .mer-cx.rp .mer-cx-skip { display: block; }
+@keyframes merCxPop { from { opacity: 0; transform: translateX(-50%) translateY(20px) skewX(-12deg); } to { opacity: 1; transform: translateX(-50%) skewX(-12deg); } }
+@media (pointer: coarse) { #game .mer-cx-btn small { display: none; } #game .mer-cx-btn { padding: 14px 22px; font-size: 15px; } }
+
+/* Race start scene: arcade title like the opening intro */
+#game .lc-cine .mer-cx-st { left: 4%; top: 40%; bottom: auto; transform: translateY(-50%); opacity: 1; text-shadow: none; font: inherit; }
+#game .lc-cine .mer-cx-st .mer-lock { position: relative; transform-origin: 0 60%; opacity: 0; }
+#game .lc-cine.lc-on .mer-cx-st .mer-lock { animation: merSlam 0.33s cubic-bezier(.2,.9,.25,1) 0.45s both; }
+#game .lc-cine.lc-on .mer-cx-st span { animation: merGlint 0.95s ease-out 0.8s both; }
+#game .lc-cine.lc-on .mer-cx-st .mer-streaks { animation: merStreak 0.8s ease-out 0.55s both; }
+#game .lc-cine .mer-cx-st .mer-c1 { font-size: min(8.6vw, 15vh); line-height: 0.88; }
+#game .lc-cine .mer-cx-st .mer-c2 { font-size: min(4.5vw, 8vh); }
+#game .lc-cine .mer-cx-st .mer-badge { opacity: 0; }
+#game .lc-cine.lc-on .mer-cx-st .mer-badge { animation: merBadgeIn 0.4s cubic-bezier(.1,.9,.2,1) 0.95s both; }
+#game .lc-cine .mer-cx-st .mer-badge em { display: inline; margin: 0; font: italic 700 clamp(11px, 1.6vw, 20px)/1.3 Arial, sans-serif; letter-spacing: 0.08em; color: #ffc83a; }
+#game .lc-cine.lc-on.mer-out .mer-cx-st { transform: translate(-120%, -50%); opacity: 0; transition: transform 0.38s cubic-bezier(.65,0,.95,.45), opacity 0.38s ease-in; }
+@media (prefers-reduced-motion: reduce) { #game .mer-cx-sl { display: none; } }
