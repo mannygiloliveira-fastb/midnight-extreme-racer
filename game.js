@@ -4447,7 +4447,12 @@ const GAME_CONFIG = {
       '<div class="mer-cx-rec">NEW RECORD</div>' +
       '<div class="mer-cx-tag"><i></i><b>REPLAY</b><span></span></div>' +
       '<button type="button" class="mer-cx-btn mer-cx-watch">WATCH REPLAY <small>ENTER</small></button>' +
-      '<button type="button" class="mer-cx-btn mer-cx-skip">SKIP REPLAY <small>ENTER</small></button>';
+      '<button type="button" class="mer-cx-btn mer-cx-skip">SKIP REPLAY <small>ENTER</small></button>' +
+      '<div class="mer-cx-popts">' +
+      '<button type="button" class="mer-cx-btn mer-cx-popt mer-cx-preplay">WATCH REPLAY</button>' +
+      '<button type="button" class="mer-cx-btn mer-cx-popt mer-cx-prestart">RESTART LAP</button>' +
+      '<button type="button" class="mer-cx-btn mer-cx-popt mer-cx-pgarage">BACK TO GARAGE</button>' +
+      '</div>';
     d.addEventListener("pointerdown", function (e) {
       e.target.closest && e.target.closest("button") && e.stopPropagation();
     });
@@ -4456,6 +4461,21 @@ const GAME_CONFIG = {
     });
     d.querySelector(".mer-cx-skip").addEventListener("click", function (e) {
       (e.stopPropagation(), merCxReplayEnd());
+    });
+    d.querySelector(".mer-cx-preplay").addEventListener("click", function (e) {
+      e.stopPropagation();
+      d.classList.remove("popts");
+      merCxReplayStart();
+    });
+    d.querySelector(".mer-cx-prestart").addEventListener("click", function (e) {
+      e.stopPropagation();
+      d.classList.remove("popts");
+      uo();
+    });
+    d.querySelector(".mer-cx-pgarage").addEventListener("click", function (e) {
+      e.stopPropagation();
+      d.classList.remove("popts");
+      sl();
     });
     t.host.appendChild(d);
     return (MERCX.dom = d);
@@ -4542,9 +4562,12 @@ const GAME_CONFIG = {
     nb && T ? merCxAnim(merCxEl(".mer-cx-rec"), "on") : merCxEl(".mer-cx-rec").classList.remove("on");
     clearTimeout(MERCX.finT);
     MERCX.finT = setTimeout(function () {
-      MERCX.dom && (merCxEl(".mer-cx-fin").classList.remove("on"), merCxEl(".mer-cx-rec").classList.remove("on"));
+      if (!MERCX.dom) return;
+      merCxEl(".mer-cx-fin").classList.remove("on");
+      merCxEl(".mer-cx-rec").classList.remove("on");
+      merCxDom().classList.add("popts");
     }, 3400);
-    L.rec.length >= 90 && merCxOffer(performance.now() + 10000);
+    if (L.rec.length >= 90) merCxOffer(performance.now() + 10000);
   }
   function merCxCamEnd() {
     var a = t.drive;
@@ -4772,6 +4795,7 @@ const GAME_CONFIG = {
     if (MERCX.dom) {
       (merCxOffer(0), merCxBars(!1), merCxLines(!1));
       (merCxEl(".mer-cx-fin").classList.remove("on"), merCxEl(".mer-cx-rec").classList.remove("on"));
+      merCxDom().classList.remove("popts");
     }
   }
   function merBoard(txt) {
